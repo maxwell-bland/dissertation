@@ -1,0 +1,397 @@
+% \iffalse meta-comment
+% Package and Class "uiucthesis2020" for use with LaTeX2e.
+% \fi
+% \iffalse
+%<*driver>
+\documentclass{ltxdoc}
+\def\fileversion{v2.30b}
+\def\filedate{2020/02/20}
+
+\usepackage{hyperref}
+
+\begin{document}
+\title{
+    The \textsf{uiucthesis2020} class
+    \thanks{This file has version number \fileversion, last revised \filedate.}}
+\author{}
+\date{\filedate}
+\maketitle
+\DocInput{uiucthesis2020.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \MakeShortVerb{\|}
+%
+% \def\pkg#1{\textsf{#1}}
+% \def\env#1{\textsf{#1}}
+%
+% \begin{abstract}
+% Load the \pkg{uiucthesis2020} class for use with \LaTeX2e
+% to produce a document that should conform to the format described by
+% the Graduate College requirements~\cite{thesisweb}.
+% \end{abstract}
+%
+% \section{The User Interface}
+%
+% This section describes how to use the \pkg{uiucthesis2020} class to
+% produce a thesis satisfying the format requirements of the
+% Grad College at UIUC. Note that this is an unofficial template so, while
+% we try to make it as close as possible to the requirements, there is no
+% guarantee it will be accepted as is.
+%
+% Any modifications, issues or bugs can be contributed back to the project
+% at~\cite{github}.
+%
+% \subsection{Using \pkg{uiucthesis2020}}
+%
+% To write a thesis, you load the UIUC thesis definitions
+% by loading the \pkg{uiucthesis2020} class at the beginning of
+% your \LaTeX\ document with the |\documentclass| command.
+% For example,
+%
+% \begin{quote} \begin{verbatim}
+% \documentclass[edeposit,drafthesis]{uiucthesis2020}
+% \usepackage{blindtext}
+% \end{verbatim} \end{quote}
+%
+% \iffalse
+%<*example>
+\documentclass[11pt,edeposit,draftthesis]{uiucthesis2020}
+\input{thesisstyle}
+%</example>
+% \fi
+%
+% The \pkg{uiucthesis2020} class provides a number of options. These are
+% meant to help with reviewing draft versions of the manuscript. Since the
+% requirements from~\cite{thesisweb} are fairly strict, there are no options
+% to modify the format.
+%
+% \DescribeMacro{[draftthesis]}
+% The |[draftthesis]| option causes each page to have a header
+% proclaiming the document to be a draft copy along with the
+% current time and date. It also omits the copyright page and adds line
+% numbers to the main matter and appendices for easy reference during review.
+%
+% \DescribeMacro{[edeposit]}
+% Use the |[edeposit]| option if you are depositing your thesis electronically.
+% The differences include a slightly changed page numbering (due to the fact
+% that the committee approval form is not included) and the use of a
+% |oneside| format for the pages.
+%
+% \DescribeMacro{[doublespacing]}
+% Use the |[doublespacing]| option to turn on double-spaced lines. By default
+% the lines are spaced at 1.5 instead.
+%
+% \DescribeMacro{[forcebottom]}
+% Use the |[forcebottom]| option to force the spacing on the bottom margin to
+% be exactly 1in. By default, the KOMA-Script package follows standard
+% typography rules and sets the bottom margin to about twice the top margin,
+% i.e. about 2in with the default settings.
+%
+% \subsection{The Title Page}
+%
+% The |\maketitle| command is redefined so that it creates a title page with
+% the correct format for a thesis at UIUC.
+%
+% \DescribeMacro{\phdthesis}
+% \DescribeMacro{\otherdoctorate}
+% \DescribeMacro{\msthesis}
+% \DescribeMacro{\othermasters}
+% Use the |\phdthesis| or |\msthesis| to set the correct thesis type.
+% If your thesis isn not for a ``Ph. D.'' or ``M. S.'', you can specify
+% your degree with either
+%
+% \begin{center}
+% \begin{tabular}{l}
+% |\otherdoctorate{|\meta{degree name}|}{|\meta{abbreviation}|}| \\
+% |\othermasters{|\meta{degree name}|}{|\meta{abbreviation}|}|.
+% \end{tabular}
+% \end{center}
+%
+% For example, specifying |\phdthesis| is equivalent to giving the command
+%
+% \begin{center}
+% |\otherdoctorate{Doctor of Philosophy}{Ph.D.}|.
+% \end{center}
+%
+% \DescribeMacro{\department}
+% \DescribeMacro{\college}
+% Set your department with |\department{|\meta{department}|}|. This defines
+% the field your degree will be in, so leave out ``Department of''.
+% Define your college with |\college{|\meta{college}|}|.
+% The default is college is ``Graduate College'' and should probably not be
+% changed.
+%
+% \DescribeMacro{\schools}
+% Use |\schools{|\meta{school list}|}| to list the previous degrees
+% you have received and the schools that you received them from.
+% Separate multiple degrees with |\\|.
+%
+% \DescribeMacro{\degreeyear}
+% Use |\degreeyear{|\meta{year}|}| to define the year in which
+% you will receive your degree.  The default is the current year.
+%
+% \DescribeMacro{\advisor}
+% \DescribeMacro{\adviser}
+% Use |\advisor{|\meta{advisor name}|}| or |\adviser{|\meta{advisor name}|}|
+% to specify the name of your advisor.
+%
+% \DescribeMacro{\committee}
+% Use |\committee{|\meta{committee members}|}| to specify the members
+% of your committee and their titles as you want them to appear on the
+% title page. Separate members with |\\|. To respect the graduate college
+% guidelines, you must use the full title of each committee members.
+% The committee chair should appear first with the designation ``, Chair''.
+% Your thesis adviser should appear second with the title
+% ``, Director of Research''. See the graduate college website for details.
+%
+% \DescribeMacro{\volume}
+% The |\volume| macro provides nominal support for very long theses that must
+% be broken up into multiple volumes. Use |\volume{|\meta{number}|}|
+% to specify the volume number (a single arabic numeral). All this macro
+% does is place the word VOLUME with the number you specify on the title
+% page. You have to take care of what appears in each volume. The easiest
+% way to do this is to create two separate source files, one for each
+% volume.
+%
+% Here's how to produce an example similar to that in
+%
+% \begin{quote} \begin{verbatim}
+\begin{document}
+
+\title{Coffee Consumption of Graduate Students Trying to Finish Dissertations}
+\author{Juan Valdez}
+\department{Food Science}
+\schools{
+    B. A., University of Columbia, 1981 \\
+    A. M., University of Illinois Urbana-Champaign, 1986}
+\phdthesis
+\advisor{Java Jack}
+\degreeyear{1994}
+\committee{
+    Professor Prof Uno, Chair \\
+    Professor Prof Dos, Director of Research \\
+    Assistant Professor Prof Tres \\
+    Adjunct Professor Prof Quatro}
+\maketitle
+% \end{verbatim} \end{quote}
+%
+% \subsection{Front Matter}
+%
+% \DescribeMacro{\frontmatter}
+% Typically, a thesis might have an Abstract, a Dedication, some
+% Acknowledgments, and a Preface before the Table of Contents.
+% Use the |\frontmatter| command to start this preliminary section
+% of the thesis.
+% The |\frontmatter| command sets the page number of the next page
+% to roman numeral iii (or ii if the |[edeposit]| option is used).
+% (The title page is page i, and the certificate
+% of committee approval, the ``red-bordered form,'' is page ii.)
+%
+% \DescribeEnv{abstract}
+% The abstract should appear in the \env{abstract} environment. Normally,
+% this just produces another chapter with |\chapter*{\abstractname}|,
+% where |\abstractname| is ``Abstract'' (see User Customization below),
+%
+% \DescribeEnv{dedication}
+% A dedication page can be printed with the \env{dedication} environment.
+% This produces a separate page with the dedication centered horizontally
+% and vertically, with the text in italics.
+%
+% After this front matter comes the Table of Contents,
+% List of Tables, List of Figures, etc.  Use the standard \LaTeX\
+% commands |\tableofcontents|, |\listoftables|, |\listoffigures|, etc.,
+% to generate them. In the \pkg{uiucthesis2020} format these lists are all
+% single spaced.
+%
+% \DescribeEnv{symbollist}
+% \DescribeEnv{symbollist*}
+% Optionally, these tables can be followed by a List of Abbreviations and/or
+% List of Symbols. Introduce these with the |\chapter| command. To aid in
+% making these lists, the \env{symbollist} and \env{symbollist*} environments are
+% defined in \pkg{uiucthesis2020}. These environments produce a two-column list
+% as illustrated below. By default the left column is 1 inch wide but can
+% be specified with an optional argument. In the starred environment, the left
+% column is left-justified, otherwise it is centered. See the example below.
+%
+% Here's an example of what the front matter of a typical
+% thesis looks like.  First comes the Abstract and the Dedication, both of
+% which are optional.
+% \begin{quote} \begin{verbatim}
+\begin{frontmatter}
+
+\begin{abstract}
+This is a comprehensive study of caffeine consumption by graduate
+students at the University of Illinois who are in the very final
+stages of completing their doctoral degrees. A study group of six
+hundred doctoral students\ldots.
+\end{abstract}
+
+%% Create a dedication in italics with no heading, centered vertically
+%% on the page.
+\begin{dedication}
+To Father and Mother.
+\end{dedication}
+
+%% Create an Acknowledgements page, many departments require you to
+%% include funding support in this.
+\chapter*{Acknowledgments}
+
+This project would not have been possible without the support of
+many people. Many thanks to my adviser, Lawrence T. Strongarm, who
+read my numerous revisions and helped make some sense of the
+confusion. Also thanks to my committee members, Reginald Bottoms,
+Karin Vegas, and Cindy Willy, who offered guidance and support.
+Thanks to the University of Illinois Graduate College for awarding
+me a Dissertation Completion Fellowship, providing me with the
+financial means to complete this project. And finally, thanks to
+my husband, parents, and numerous friends who endured this long
+process with me, always offering support and love.
+
+%% The thesis format requires the Table of Contents to come
+%% before any other major sections, all of these sections after
+%% the Table of Contents must be listed therein (i.e., use \chapter,
+%% not \chapter*).  Common sections to have between the Table of
+%% Contents and the main text are:
+%%
+%% List of Tables
+%% List of Figures
+%% List Symbols and/or Abbreviations
+%% etc.
+
+\tableofcontents
+\listoftables
+\listoffigures
+% \end{verbatim} \end{quote}
+%
+% If you want a List of Symbols or Abbreviations, you can do so as follows:
+%
+% \begin{quote} \begin{verbatim}
+%% Create a List of Abbreviations. The left column
+%% is 1 inch wide and left-justified
+\chapter{List of Abbreviations}
+
+\begin{symbollist*}
+\item[CA] Caffeine Addict.
+\item[CD] Coffee Drinker.
+\end{symbollist*}
+
+%% Create a List of Symbols. The left column
+%% is 0.7 inch wide and centered
+\chapter{List of Symbols}
+
+\begin{symbollist}[0.7in]
+\item[$\tau$] Time taken to drink one cup of coffee.
+\item[$\mu$g] Micrograms (of caffeine, generally).
+\end{symbollist}
+
+\end{frontmatter}
+% \end{verbatim} \end{quote}
+%
+% \subsection{Main Matter}
+%
+% \DescribeMacro{\mainmatter}
+% Begin the main body of your thesis with the |\mainmatter| command.
+% It resets the page number to arabic numeral 1. You can now use any of the
+% commands defined by the the |srcbook| document class to write your thesis.
+%
+% \begin{quote} \begin{verbatim}
+\begin{mainmatter}
+
+%% Sample chapter to test margins
+\chapter{Introduction}
+
+\Blindtext[6]
+
+\chapter{Methods}
+
+How does all this relate to coffee? We direct the reader
+to~\cite{Walker2015} and~\cite{Hager2006}.
+
+\Blindtext[6]
+
+\chapter{Results}
+
+\Blindtext[6]
+
+\chapter{Conclusions}
+
+We conclude that graduate students like coffee.
+
+\end{mainmatter}
+% \end{verbatim} \end{quote}
+%
+% \subsection{Back Matter}
+%
+% \DescribeMacro{\backmatter}
+% The last few chapters in your thesis should not have chapter
+% numbers, but should be listed in the Table of Contents.
+% These chapters include the Bibliography and the Index. \LaTeX's
+% |\backmatter| command accomplishes this.
+%
+% \DescribeMacro{\bibliography}
+% Use the standard \LaTeX\ bibliography commands to
+% create your bibliography.
+%
+% \begin{quote} \begin{verbatim}
+\begin{backmatter}
+
+\bibliographystyle{apalike}
+\bibliography{references}
+
+\end{backmatter}
+% \end{verbatim} \end{quote}
+%
+% \subsection{Reference Matter}
+%
+% \DescribeMacro{\appendix}
+% To switch from the body of your thesis to the reference material
+% at the end, you should use the standard \LaTeX\ |\appendix| command.
+% In \pkg{uiucthesis2020}, there is also a starred version of this command
+% that eliminates the lettering of the appendices (use if you have
+% a single appendix).
+%
+% \begin{quote} \begin{verbatim}
+\appendix
+\chapter{My Appendix}
+\Blindtext[6]
+
+\end{document}
+% \end{verbatim} \end{quote}
+%
+% \section{User Customization}
+%
+% \DescribeMacro{\draftheader}
+% If you don't like the header that the the |[draftthesis]| option
+% creates, you can redefine the |\draftheader| command to any text.
+%
+% \DescribeMacro{\nocopyrightpage}
+% Unless the |[draftthesis]| option is used, a page with the copyright notice
+% is printed before the title page. If you don't want this page to
+% appear, even in the final version, put the |\nocopyrightpage| macro
+% somewhere in the preamble.
+%
+% \DescribeMacro{\bibname}
+% |\bibname| is a standard \LaTeX\ macro that contains the title of the reference
+% section at the end of your thesis; ``References'' by default. Use
+% |\renewcommand| to redefine it in the preamble.
+%
+% \DescribeMacro{\abstractname}
+% Like above, but for the abstract. By default, ``Abstract''.
+%
+% \StopEventually{%
+% \begin{thebibliography}{9}
+%   \bibitem{thesisweb}
+%       \emph{Graduate College Thesis Requirements}.
+%       \newblock |https://grad.illinois.edu/thesis/format|
+%
+%   \bibitem{github}
+%       \emph{UIUC Thesis Github}.
+%       \newblock |https://github.com/alexfikl/uiucthesis2020|
+% \end{thebibliography}
+% }
+% \Finale
+\endinput
+
+%% vim: nospell:filetype=tex

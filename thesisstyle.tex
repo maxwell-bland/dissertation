@@ -1,0 +1,120 @@
+% {{{ packages
+
+\usepackage{blindtext}
+
+% math
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{stmaryrd}
+\usepackage{cases}
+
+% pretty links
+\usepackage{xparse}
+\usepackage{hyperref}
+\usepackage[nameinlink]{cleveref}
+\hypersetup{
+    colorlinks=true,
+    urlcolor=blue,
+    citecolor=black,
+    linkcolor=black
+}
+
+% better environments
+\usepackage[shortlabels]{enumitem}
+\usepackage{booktabs}
+\usepackage{caption}
+
+% graphics
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+% fancier font
+\usepackage[sc]{mathpazo}
+% better typography
+\usepackage[activate={true,nocompatibility}, % activate protrusion and font expansion
+            final,              % enable microtype, use draft to disable
+            tracking=true,
+            kerning=true,       % optimise interactions between characters
+            spacing=true,       % more uniform spacing between words
+            factor=1100,        % more protrusion
+            stretch=10,         % smaller values (default 20, 20) to avoid blurring
+            shrink=10]{microtype}
+\SetTracking{encoding={*}, shape=sc}{40}
+
+% }}}
+
+% {{{ formatting
+
+% enable section numbering only for the first three header levels
+\setcounter{secnumdepth}{2}
+
+% caption format
+% NOTE: set format=plain to remove caption indentation
+\captionsetup{
+    format=hang
+}
+
+% allow subsubsections in the TOC, if there are any
+% NOTE: if you got to subsubsections, you probably have too many!
+\setcounter{tocdepth}{\subsubsectiontocdepth}
+\setcounter{secnumdepth}{\subsubsectionnumdepth}
+
+% NOTE: if there are many levels of indentation int the TOC, making it flat
+% might be a good option with the following options
+% \KOMAoption{toc}{indenttextentries,flat}
+
+% https://marketing.illinois.edu/visual-identity/color
+\definecolor{IlliniOrange}{RGB}{255, 95, 5}
+\definecolor{IlliniAltgeld}{RGB}{200, 65, 19}
+\definecolor{IlliniBlue}{RGB}{19, 41, 75}
+
+\definecolor{IlliniAlmaMater}{RGB}{30, 56, 119}
+\definecolor{IlliniIndustrialBlue}{RGB}{29, 88, 167}
+\definecolor{IlliniArchesBlue}{RGB}{0, 159, 212}
+\definecolor{IlliniCloud}{RGB}{248, 250, 252}
+\definecolor{IlliniHeritageOrange}{RGB}{245, 130, 30}
+
+% }}}
+
+% {{{ commands
+
+\NewDocumentCommand \dx { O{x} } {\,\mathrm{d} #1}
+\NewDocumentCommand \vect { m } { \mathbold{#1} }
+\NewDocumentCommand \od { m m } { \dfrac{\mathrm{d} #1}{\mathrm{d} #2} }
+\NewDocumentCommand \pd { m m } { \dfrac{\partial #1}{\partial #2} }
+
+% jump notation
+\NewDocumentCommand \jump { sm } {
+    \IfBooleanTF#1
+    {\left\llbracket #2 \right\rrbracket}
+    {\llbracket #2 \rrbracket}
+}
+% average notation
+\NewDocumentCommand \avg { sm } {
+    \IfBooleanTF#1
+    {\left\langle #2 \right\rangle}
+    {\langle #2 \rangle}
+}
+% inner product
+\NewDocumentCommand \ip { m } { \avg{ #1 } }
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\argmin}{\operatorname{arg}\,\operatorname{min}}
+
+% }}}
+
+% {{{ environments
+
+\NewDocumentCommand \newtheoremin { m m m } {
+    \newtheorem{#1}{#2}
+    \numberwithin{#1}{#3}
+}
+\newtheoremin{example}{Example}{section}
+\newtheoremin{remark}{Remark}{section}
+\newtheoremin{definition}{Definition}{section}
+\newtheoremin{proposition}{Proposition}{section}
+\newtheoremin{lemma}{Lemma}{section}
+\newtheoremin{theorem}{Theorem}{section}
+
+% }}}
