@@ -6,24 +6,24 @@
 
 % {{{ title
 
-\title{Coffee Consumption of Graduate Students Trying to Finish Dissertations}
-\author{Juan Valdez}
-\department{Food Science}
+\title{Play Chicken: Novel Threats to the Security of Avionics, Redactions, and Industrial Control}
+\author{Maxwell Bland}
+\department{Computer Science}
 
 \schools{
-B. A., University of Columbia, 1981 \\
-A. M., University of Illinois Urbana-Champaign, 1986
+B. S., University of Califonia, San Diego, 2018 \\
+M. S., University of Califonia, San Diego, 2019 \\
 }
 
 \phdthesis
-\advisor{Java Jack}
-\degreeyear{1994}
+\advisor{Kirill Levchenko}
+\degreeyear{2023}
 
 \committee{
-Professor Prof Uno, Chair \\
-Professor Prof Dos, Director of Research \\
-Assistant Professor Prof Tres \\
-Adjunct Professor Prof Quatro
+Professor Kirill Levchenko, Chair and Director of Research \\
+Professor Adam Bates \\
+Professor Aaron Schulman \\
+Professor Gang Wang
 }
 
 % }}}
@@ -37,27 +37,33 @@ Adjunct Professor Prof Quatro
 \begin{frontmatter}
 
 \begin{abstract}
-This is a comprehensive study of caffeine consumption by graduate
-students at the University of Illinois who are in the very final
-stages of completing their doctoral degrees. A study group of six
-hundred doctoral students\ldots.
+The world is full of problems for which weak assumptions will not suffice to provide security, as adversaries are more than willing to make axiomatic leaps if these are counterbalanced by opportunity cost.
+However, standard analyses of systems' security tend to avoid strong speculations due to concerns over the precision of the resulting derivation.
+For example, fuzzing speculates on potential inputs to a process but not the process itself.
+The question that interests us is therefore \emph{what defines a threat surface} and whether we can develop exploits from partial, residual, or correlated information domains.
+
+Put more precisely, will stronger speculations regarding a system allow us to develop novel exploits and what does such speculation entail?
+After all, in the presence of empirical falsifiability axiomatic strength is irrelevant, so we may defend the utility of this approach by applying it to material: we achieve code execution on a critical aircraft component, determine redacted text using leaked information, and model inputs necessary for the precise destabilization of a chemical plant's reactor pressure.
+
+We explore the effects of this strategy by analyzing how \emph{cartesian doubt} manifests in well-defined systems, such as a software's PDF document output, firmware meant to run on a physical system, and mathematics.
+In avionics we discover it is not necessary to model some hardware or software semantics of a system to develop exploits.
+We also find the exact resolution of a redaction's content is often not necessary to severely threaten its security.
+Last, in our analysis of continuous control equations, we demonstrate imprecise representations of a program's semantics can be used to develop precise exploits on a system.
 \end{abstract}
 
 \chapter*{Acknowledgments}
 
-This project would not have been possible without the support of
-many people. Many thanks to my adviser, Lawrence T. Strongarm, who
-read my numerous revisions and helped make some sense of the
-confusion. Also thanks to my committee members, Reginald Bottoms,
-Karin Vegas, and Cindy Willy, who offered guidance and support.
-Thanks to the University of Illinois Graduate College for awarding
-me a Dissertation Completion Fellowship, providing me with the
-financial means to complete this project. And finally, thanks to
-my husband, parents, and numerous friends who endured this long
-process with me, always offering support and love.
+I would like to thank my advisor, Kirill Levchenko, for pushing me to a standard of capability and achievement few attain and for maintaining his support during this arduous process.
+Thank you to my committee members, Adam Bates, Aaron Schulman, and Gang Wang, for their support and guidance throughout the Ph.D., before, and in the completion of this disseration.
+Thanks to the University of Illinois for providing a platform to this research, and to the Cymanii project for funding my work on the InteGreat system.
+Finally, thanks to Annika, her parents, my own parents, and numerous friends who saw me through this process, offering their support and encouragement.
 
-\begin{dedication}
-To Coffee
+\begin{dedication}``For it is at the very moment when philosophy attempted for the first time to
+	think rigorously the primacy of scientific knowledge that it decided to
+	abjure precisely that aspect of thought which constituted the
+	revolutionary character of scientific knowledge: its speculative
+	import.'' \\
+	--- \emph{Quentin Meillassoux}, After Finitude, p. 120.
 \end{dedication}
 
 % NOTE: recommended by the microtype docs to disable protrusion for the toc
