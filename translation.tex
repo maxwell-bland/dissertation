@@ -1,4 +1,10 @@
 \chapter{Logic-based Intermediate Representations and Lifting}
+\label{chap:integreat}
+
+More fundamental to an emulation is the representation used to detail the system under analysis.
+In this section, we will discuss progress made on the subject of lifting one representation, closed-source binary codes, to another which is more human-comprehensible.
+The novel contribution of this section will be the application of a restricted form of logic-based programming to the problem of binary lifting.
+In particular, we introduce a system, InteGreat, which is capable of expressing lifting rules over the theory of bitvectors using the syntax provided by Z3, which includes support for many of the standard operations used for reasoning about computations, such as fixed-point operators for reasoning about the invariants of expressions in loops.
 
 \section{Introduction}
 
