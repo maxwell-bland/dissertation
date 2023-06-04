@@ -125,12 +125,40 @@ They strive for a static representation of program semantics rather than one whi
 This dissertation explores the possibility of using a logic-based intermediate representation to lift continuous control equations from the binary firmware of Cyber-Physical Systems~\cite{letichevsky2017cyber}.
 We begin by representing and lifting simple microarchtectural semantics, such as the splitting of a floating point number split across registers 0 and 1 in the ARM architecture.
 These rules are then nested into more complex deductive chains, such as the structure of common mathematical functions, through the use of statements in propositional logic over the theory of uninterpreted functions\footnote{Uninterpreted functions discard the computation under analysis and reduce it to a single symbol and list of input, output locations.}.
-Once specified, these rules are combined with abstract interpretation, which identifies the specific relations between input and output locations, in order to translate logically-defined program slice boundaries in the system under analysis to relations and operations over uninterpreted functions.
-When correctly performed, this method lifts implicit, abstract semantics from a binary firmware images, e.g. mathematical functions like cosine.
+The representation is extracted using abstract interpretation as a subroutine to identify the specific relations between input and output locations, in order to translate logically-defined program slice boundaries in the system under analysis to relations and operations over uninterpreted functions.
+The results are then combined via a theorem prover to lift implicit, abstract semantics from a binary firmware images, e.g. mathematical functions like cosine.
 
 We implemented this approach in a tool called InteGreat and use the tool to extract functions from a Programmable Logic Controller (PLC) used to control the reactor pressure of a chemical plant, as well as the stabilization algorithm of a quad-copter and a single backpropagation step in an artificial neural network.
 InteGreat does not just lift program slices to the continuous domain using the logical statements embedded in its intermediate representation: it then translates the lifted representation into a Matlab emulation of the system, allowing us to model precise destabilization attacks on the chemical plant and identify flaws in implementations and published versions of the quad-copter's stabilization algorithm.
 
 \section{Summary of Contributions}
 
+The effective emulation of complex systems is a critical component of their analysis and measurement.
+This dissertation presents three different approaches to the emulation of complex systems, each of which has been used to identify and exploit vulnerabilities in real-world systems, and its objective is to expand our understanding of how unknown information in systems may be rediscovered.
+Our contributions are therefore as follows:
+
+\begin{enumerate}
+	\item Novel state-of-the-art techniques in the rehosting and analysis of complex embedded systems through the use of targeted abstract interpretation and comprehension of firmware constraint sets into models of hardware peripherals.
+	This approach allowed us to emulate hardware devices across three different miroarchitectures~\cite{johnson2021jetset}, and perform dynamic analysis (fuzzing) of the systems in question, then reproduce the results of fuzzing on the related physical devices.
+		We were able to develop a sophisticated exploits for a critical avionics system by combining careful analysis of the generated emulations with analysis of the device in question~\cite{cmurootkit} (Chapter~\ref{chap:rehost}).
+	\item The first effective attacks on document redactions where the characters of the text are not presentin the PDF document (a literal black box)~\cite{bland2023story}.
+		By emulating the glyph positioning behavior of popular PDF document creation software, we were able to uncover sensitive information from several documents of significant historical importance.
+		Our approach has been used to identify hundreds of broken redactions in documents from the US Court System, the Digital National Security Archives, and the Office of Inspector General (Chapter~\ref{chap:info}).
+	\item The introduction of logic-based intermediate representations for binary lifting and the bottom-up verification of cyber-physical system implementations~\cite{bland2023integreat}.
+		We implement a system adopting this approach and use it to extract control equations from real-world firmware, emulate the associated systems behavior, and develop a precise destabilization attack on a chemical plant's reactor pressure (Chapter~\ref{chap:integreat}).
+\end{enumerate}
+
+To the extent that it is safe, we have released software code and tools for all associated techniques: JetSet~\cite{jetsetsource}, which applies symbolic execution to rehosting, Edact-Ray~\cite{deredactionsource}, but only the portions relating to the location and defense of vulnerable redactions, and InteGreat~\cite{integreat}, for lifting using a logic-based intermediate representation.
+Each of these systems has been applied to real-world case study systems with verifiable results.
+The most impactful of these is Edact-Ray, which has identified vulnerabilities and hidden information in a number of important documents (Sec.~\ref{sec:redaction-attack} and Sec.~\ref{sec:redaction-ethics}); the full version of the tool now sees continued use by the US courts and the US OIG.
+Jetset was able to sucessfully rehost thirteen distinct peices of firmware (Sec.~\ref{sec:jetset-eval}) and an associated system-mode QEMU fuzzer was able to reproduce and identify identical codepaths across real and Jetset-emulated copies of both Linux system calls on the Raspberry Pi 2 and VRTX system calls on the CMU-900 (Sec.~\ref{sec:jetset-attack}).
+The techniques and tools are also actively being shared with numerous other researchers in the Department of Energy, Universities, and private industry.
+
 \section{Dissertation Structure}
+
+We introduce technical concepts and background in Chapter~\ref{chap:prelim}.
+Chapter~\ref{chap:emulation} describes different forms of emulation and the systems used throughout this dissertation, such as symbolic executors, as well as related work on each subject.
+We then introduce the concept of rehosting for emulation in Chapter~\ref{chap:rehost}, and describe the JetSet system for rehosting embedded systems.
+Chapter~\ref{chap:info} describes emulation's role in dictionary attacks on leaked information as well as the Edact-Ray system for identifying broken redactions in PDF documents.
+In Chapter~\ref{chap:integreat}, we introduce the InteGreat system for lifting control equations from binary firmware and the function extraction, summarization for the purposes of emulating of complex cyber-physical system behavior.
+We conclude in Chapter~\ref{chap:conclusion} with a summary of this dissertation and a discussion of future work.

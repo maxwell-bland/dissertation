@@ -1,12 +1,174 @@
 \chapter{Preliminaries}
+\label{chap:prelim}
+
+Here, we introduce concepts, vocabulary terms, operations, and initial related work that is referenced throughout this disseration.
+The theme of each of these subject areas is the representation of information, whether that information relates to the operation of binary code, the content of removed text, or a deduced interpretation of an existing system.
 
 \section{Abstract Interpretation}
 
-\section{Firmware Rehosting}
+Under the traditional definition, \emph{abstract interpretation} is a method of approximating the behavior of a program using monotonic functions over ordered sets (typically lattices).
+It is related to the emulation of a program in that it is intended to extract a model of the program's behavior without performing the exact computations involved.
+However, abstract interpretation has become more of a general framework for defining relations between different domains, as the necessity of translation between dissimilar symbolic representations, e.g. in transpilers, has become more prevalent.
 
-\section{Guess and Check Algorithms}
+Arbitrarily, let $L$ and $L'$ be \emph{concrete} and \emph{abstract} ordered sets, repectively.\footnote{The ordering of higher or lower levels of abstraction themselves is a function over the mathematical structures being discussed.}
+These sets are related to each-other by a total function, which maps elements in one set to another.
+We define two functions, $\alpha$ and $\gamma$, which map elements of $L$ to $L'$ and vice versa, and are called the \emph{abstraction} function and \emph{concretization} function respectively.
+
+Then, given ordered sets $L_{1}, L_{2}, L'_{1}, L'_{2}$, the concrete semantics $f$ is a monotonic function from $L_{1}$ to $L_{2}$, and a correct abstraction from $L$ to $L'$ is \emph{valid} if the abstract semantics $f'$ mapping $L'_{1}$ to $L'_{2}$ preserves the ordering in $f$ of $L_{1}$ to $L_{2}$.
+In this definition the ordering operation on the sets is left undefined, and in the absence of a decidable set of mathematical qualities, e.g. many nontrivial computer programs, so standard implementations of abstract interpretation on program execution operate by mapping between a concrete execution trace in registers and memory and the theory of bitvectors, rather than the highly abstract semantics used by programs' users and authors.
+
+\subsection{Symbolic Execution}
+
+This specific form of abstract interpretation is called \emph{symbolic execution}, and is a method of program analysis that operates by tracking the values of variables in a program as symbolic expressions, rather than concrete values.
+For example, in standard execution the statement $(x > 5) ?\ y + 1 : x + 1$ would be concretely evaluated to 4 if $x = 3$, however, a standard symbolic execution, the system will record the pair $(x<=5; x=x+1),(x>5;x=y+1)$ into a symbolic state, representing the two possible execution paths.
+
+Symbolic execution is a powerful tool for program analysis, but it is not without its limitations.
+The core challenge is the \emph{path explosion} problem, where the number of possible execution paths grows exponentially with the number of branches in the program.
+This can be limited through \emph{loop invariant} analysis, where the system attempts to identify the invariants of a loop and only execute the loop a finite number of times, a \emph{search strategy}, which determines which execution paths to explore from the exponential number possible, or a number of other deductive techniques.
+Closely related is the challenge of \emph{memory aliasing}, which occurs when the system is unable to determine whether two pointers point to the same memory location, as the values of each pointer are treated as symbolic expressions over the theory of bitvectors rather than concrete values.
+Additionally, there is the \emph{environmental modeling} problem, where symbolic execution is unsound due to missing context, typically because the specific execution behavior of the hardware is not present, e.g. interrupts or highly-specific microarchitectural features.
+
+\subsection{Lifting}
+
+We contrast abstract interpretation with the notion of \emph{lifting}, a borrowed term concept from category theory, where given a structure-preserving map from one mathematical structure to another of the same type (a morphism), $f: X \rightarrow Y$,  and another $g: Z \rightarrow Y$, a lifting of $f$ to $Z$ is a morphism $h: X \rightarrow Z$ such that $f = g \circ h$, or more simply, a function that points to another representation that \emph{may} more closely resemble the structure $Y$ but also has a morphism to $Y$ (Fig.~\ref{fig:lift}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  >=latex,
+  every edge/.style={draw, very thick},
+  every node/.style={font=\footnotesize},
+  lift/.style={draw=none, fill=none}
+  ]
+  \node (X) at (0,0) {$X$};
+  \node (Y) at (3,0) {$Y$};
+  \node (Z) at (0,-2) {$Z$};
+  \draw[->] (X) edge node[above] {$f$} (Y);
+  \draw[->] (Z) edge node[above] {$g$} (Y);
+  \draw[->] (X) edge node[left] {$h$} (Z);
+\end{tikzpicture}
+\caption{$h$ is a lifting $f$ to $Z$}
+\label{fig:lift}
+\end{figure}
+
+When applied to code, lifting typically refers to exposing the semantic structure of the binary to a higher level of abstraction.
+However, as the mathematical definition suggests, lifting may also refer to a \emph{different} structure with the same morphism to the ``true'' structure.
+Note that lifting is a form of \emph{translation}, but the new structure exists over a different domain.
+For example, machine code may be lifted to a symbolic representation that represents a call-graph, or it may be lifted to a higher-level language, e.g. C, but it would be translation rather than lifting if the code was made into an equivalent, different machine code, e.g. ARM to x86.
+
+Standard forms of lifting include translating a program into a form of graph representing latent relationships in the program, in order to simplify algorithms for reasoning about the program's structure.
+For example, a program may be translated into a \emph{control flow graph} (CFG), where each node represents a basic block of code and each edge represents a possible transition between blocks.
+Figure~\ref{fig:cfg} shows an example of lifting a CFG from a simple machine code program.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  >=latex
+]
+% split the picture into two halves. on the left have the disassembly and on the right the CFG
+% disassembly with a simple branch
+\node (disassembly) at (0,0) {
+\begin{tabular}{ll}
+\texttt{0x0} & \texttt{mov eax, 0x0} \\
+\texttt{0x5} & \texttt{mov ebx, 0x1} \\
+\texttt{0xa} & \texttt{cmp eax, ebx} \\
+\texttt{0xc} & \texttt{jne 0x15} \\
+\texttt{0xe} & \texttt{mov eax, 0x1} \\
+\texttt{0x13} & \texttt{jmp 0x1a} \\
+\texttt{0x15} & \texttt{mov eax, 0x0} \\
+\texttt{0x1a} & \texttt{ret}
+\end{tabular}
+};
+% CFG
+\node (cfg) at (6,0) {
+\begin{tikzpicture}[
+  >=latex,
+  every edge/.style={draw, very thick},
+  every node/.style={font=\footnotesize},
+  lift/.style={draw=none, fill=none},
+  block/.style={draw, rectangle, minimum height=0.5cm, minimum width=0.5cm}
+  ]
+  \node[block] (0) at (-3,-2) {\texttt{0x0}};
+  \node[block] (5) at (-1.5,-2) {\texttt{0x5}};
+  \node[block] (a) at (0,-2) {\texttt{0xa}};
+  \node[block] (c) at (0,-3) {\texttt{0xc}};
+  \node[block] (e) at (0,-4) {\texttt{0xe}};
+  \node[block] (13) at (0,-5) {\texttt{0x13}};
+  \node[block] (15) at (-1.5,-6) {\texttt{0x15}};
+  \node[block] (1a) at (0,-6) {\texttt{0x1a}};
+  \draw[->] (0) edge (5);
+  \draw[->] (5) edge (a);
+  \draw[->] (a) edge (c);
+  \draw[->] (c) edge (e);
+  \draw[->] (e) edge (13);
+  \draw[->] (15) edge (1a);
+  \draw[->] (c) edge[bend right=30] (15);
+  \draw[->] (13) edge (1a);
+\end{tikzpicture}
+};
+% draw an arrow between the two halves
+\draw[->, very thick] (disassembly) edge (cfg);
+\end{tikzpicture}
+\caption{Lifting a CFG from machine code}
+\label{fig:cfg}
+\end{figure}
+
+\emph{Program slicing} is a form of lifting which transforms a program specification into \emph{slices}, sets of statements affecting sets of values in the program's state at some points of interest.
+More generally, they may also refer to arbitrary subsets of the program's statements.
+The determination of the slices is typically referred to as a \emph{slice criterion}.
+Symbolic execution can be used to determine a given slice by exploring all paths through a program and thus the statements which affect the value of a variable of interest.
+
+\subsection{Intermediate Representations}
+
+The term \emph{intermediate representation} (IR) refers to a representation of a program that is used as an intermediate step a translation process, typically for a compiler.
+The IR is typically designed to be easy to translate to and from the source and target languages, and to be easy to reason about.
+Referring to Fig.~\ref{fig:lift}, in lifting the IR is the structure $Z$ used to translate between $X$ and $Y$.
+The critical form of IR for use in symbolic execution and abstract interpretation more generally are abstract syntax trees (ASTs).
+ASTs are a form of IR that represent the syntactic structure of a program as a tree, where each node represents a syntactic construct and each edge represents a relationship between constructs.
+For example, the AST for the expression \texttt{a + b * c} is shown in Fig.~\ref{fig:ast}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  >=latex,
+  every edge/.style={draw, very thick},
+  every node/.style={font=\footnotesize},
+  lift/.style={draw=none, fill=none},
+  block/.style={draw, rectangle, minimum height=0.5cm, minimum width=0.5cm}
+  ]
+  \node[block] (plus) at (0,0) {\texttt{+}};
+  \node[block] (a) at (-1,-1) {\texttt{a}};
+  \node[block] (times) at (1,-1) {\texttt{*}};
+  \node[block] (b) at (0,-2) {\texttt{b}};
+  \node[block] (c) at (2,-2) {\texttt{c}};
+  \draw[->] (plus) edge (a);
+  \draw[->] (plus) edge (times);
+  \draw[->] (times) edge (b);
+  \draw[->] (times) edge (c);
+\end{tikzpicture}
+\caption{AST for \texttt{a + b * c}}
+\label{fig:ast}
+\end{figure}
+
+% relate IRs to Hoare Logic. Is Hoare Logic an IR?
+Commonly ASTs are used in conjunction with \emph{Hoare logic} to reason about programs.
+Hoare logic is a formal system for reasoning about the correctness of programs.
+It is based on the notion of \emph{Hoare triples}, which are statements of the form $\{P\} S \{Q\}$, where $P$ and $Q$ are \emph{predicates} and $S$ is a statement.
+The meaning of a Hoare triple is that if the predicate $P$ holds before the execution of $S$, then the predicate $Q$ will hold after the execution of $S$.
+For example, the Hoare triple $\{x = 0\} x := x + 1 \{x = 1\}$ states that if $x$ is equal to $0$ before the execution of $x := x + 1$, then $x$ will be equal to $1$ after the execution of $x := x + 1$.
+
+This is equivalent to a \emph{satisfaction relation} between a program and a specification, which evaluates to true if the program satisfies the specification.
+In symbolic execution, this specification is represented as a set of predicates defined over the program's state, determined both by external inputs and the current execution path under consideration.
+By evaluating the satisfaction relation, symbolic execution can determine whether a given path is feasible.
+
+Finally, note that while symbolic execution, lifting, and intermediate representations \emph{can} preserve a program's semantics, each has the potential to introduce errors.
+For example, the process of lifting a program to an IR may introduce errors if the IR is not expressive enough to represent the semantics of the program.
+The outputs of this translation ultimately serve to perform analysis on the program's behavior, and the correctness of this analysis depends on the correctness of the translation.
+Thus, the use of these techniques is ultimately one basis for emulation, an insight that will become more apparent in our discussion of QEMU (Sec.~\ref{sec:hardemu}).
 
 \section{Information}
 
-\section{Continuous Control}
+\subsection{Dependence vs Independence}
+
+\subsection{Dictionaries}
 
