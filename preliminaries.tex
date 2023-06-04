@@ -47,7 +47,7 @@ We contrast abstract interpretation with the notion of \emph{lifting}, a borrowe
   \draw[->] (Z) edge node[above] {$g$} (Y);
   \draw[->] (X) edge node[left] {$h$} (Z);
 \end{tikzpicture}
-\caption{$h$ is a lifting $f$ to $Z$}
+\caption{Lifting $f$ to $Z$}
 \label{fig:lift}
 \end{figure}
 
@@ -151,7 +151,7 @@ For example, the AST for the expression \texttt{a + b * c} is shown in Fig.~\ref
 \end{figure}
 
 % relate IRs to Hoare Logic. Is Hoare Logic an IR?
-Commonly ASTs are used in conjunction with \emph{Hoare logic} to reason about programs.
+ASTs may be used in conjunction with \emph{Hoare logic} to reason about programs.
 Hoare logic is a formal system for reasoning about the correctness of programs.
 It is based on the notion of \emph{Hoare triples}, which are statements of the form $\{P\} S \{Q\}$, where $P$ and $Q$ are \emph{predicates} and $S$ is a statement.
 The meaning of a Hoare triple is that if the predicate $P$ holds before the execution of $S$, then the predicate $Q$ will hold after the execution of $S$.
@@ -168,7 +168,53 @@ Thus, the use of these techniques is ultimately one basis for emulation, an insi
 
 \section{Information}
 
-\subsection{Dependence vs Independence}
+Many definitions of \emph{information} exist---this dissertation will use information to represent \emph{pure difference} or distiguishability between two objects, e.g. 0 and 1.
+A key measure of information is \emph{entropy} which quantifies the amount of uncertainty involved in a random process.
+Given a random variable $X$ with a probability distribution $P$, the entropy of $X$ is defined as
 
-\subsection{Dictionaries}
+\begin{equation}
+H(X) = -\sum_{x \in X} P(x) \log_2 P(x)
+\end{equation}
 
+\noindent
+where $P(x)$ is the probability that $X$ takes on the value $x$.
+For example, the entropy of a fair coin is $H(X) = -\frac{1}{2} \log_2 \frac{1}{2} - \frac{1}{2} \log_2 \frac{1}{2} = 1$.
+The entropy of a biased coin with $P(\text{heads}) = 0.9$ is $H(X) = -0.9 \log_2 0.9 - 0.1 \log_2 0.1 \approx 0.47$.
+The use of base 2 for the log indicates that entropy is measured in \emph{bits}.
+Entropy quantifies the amount of information in a distribution as the number of bits required to represent it.
+For a uniform distribution over $n$ values, the entropy is $\log_2 n$.
+
+It is therefore also possible to quantify the amount of information \emph{leaked} by a process if we consider the amount of information present in the initial, presumed inaccessible distribution and compare this with the amount of information present in the final, accessible distribution.
+What actually exists is what can be differentiated: if the number of bits in the final distribution is lower than the number of bits in the initial distribution, then some information has been lost.
+This does not necessarily indicate it is impossible to disambiguate a \emph{specific} value using accessible information, but (assuming quantization) that some value from the initial distribution cannot be differentiated from some other value.
+
+We will refer to the prior, inaccessbile distribution as a \emph{dictionary} which limits the scope of the possibilities we are willing to consider.
+In some cases it is possible to construct a dictionary that is \emph{complete}, i.e. that contains all possible values.
+When a dictionary is incomplete, often due to practical limitations on computation and analysis time, it becomes necessary judge whether a dictionary is reasonable.
+
+\subsection{Guess and Check}
+
+We consider a dictionary reasonable if it contains values that are likely to be observed in practice.
+However, this is not a sufficient restriction for \emph{soundness}, i.e. that results derived from considering the dictionary as the superset of the accessible information must include all correct values.
+So we have two forms of uncertainty: analytic uncertainty with respect to the dictionary, and empirical uncertainty with respect to the resolution of the correct dictionary entry from available information.
+The former occurs in cases where the true set of values may not be a strict subset of the considered values, and the latter occurs where information is lost.
+
+The derivation of a value from accessible infromation is a \emph{guess} and must be subject to some form \emph{check}, or \emph{oracle} to determine whether, in fact, it is a correct derivation.
+However, when analyzing real systems, an oracle is often unavailable, and so we must rely on the \emph{likelihood} of a guess being correct.
+
+\subsection{Likelihood, Dependence, and Independence}
+
+Likelihood is is a defined function measuring the probability of a given value being correct.
+In general, whatever the likelihood function, it is dependent on certain \emph{regularity conditions}, a set of assumptions which imply that the probability given by the function is correct.
+A \emph{uniform} distribution over a set of values implies that the likelihood of any value is equal to the inverse of the number of values.
+An \emph{empirical} distribution over a set of values implies that the likelihood of any value is equal to the frequency of that value in the set.
+
+The likelihood of a guess being correct is dependent on the amount of information available to the guesser, and is informed by the method of analysis.
+We therefore differentiate between \emph{dependent} and \emph{independent} information.
+Two pieces of information are \emph{dependent} if the presence of one piece of information affects the likelihood of the other.
+Two pieces of information are \emph{independent} if the presence of one piece of information does not affect the likelihood of the other.
+
+The goal of analysis and emulation is often to maximize the likelihood of correct guesses, ideally to remove guesswork altogether, and relies on the identification and explication of dependencies between information.
+It is possible to quantify the capacity of an emulation by considering the accessible information present in the emulated copy in contrast to the ground-truth system.
+A perfect simulation would perfectly disambiguate any feature that can be disambiguated in the ground-truth system, and so the accessible information in the emulated copy would be equal to the accessible information in the ground-truth system, and a poor emulation would disambiguate nothing (be unrelated to the original system).
+The capacity of an emulation is proportional to our capacity for analyzing the ground-truth system.
