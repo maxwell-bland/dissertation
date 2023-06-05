@@ -61,11 +61,11 @@ One shared theme is the use of subtle information present in things which are di
 As a result, our strategies are particularly useful for real-world systems of which only some qualities are known or accessible.
 Thus, we are also able to provide evidence of our theories' effectiveness in practice and provide insight into the absolute limits of emulation.
 
-Correct emulation also implies avoidance towards making unjustified assumptions about possible states or accurate respresentations of the system under analysis.
-A complete description of the problem acknowledges mathematics is incapable of conferring a priori existence upon its subject and adopts conceptual or empirical strategies into the execution and analysis of unknown system features.
 In the description of these strategies for emulation, we will find the application of guesswork is unavoidable, and that these guesses must later be checked and verified against the system itself.
+Correct emulation avoids making unjustified assumptions about possible states or accurate respresentations of the system under analysis.
 Luck and probability play an integral role in the application of emulations and the proper use of emulation often requires the joint application of uncertainty and sensitivity analysis, but we will not limit ourselves to analyzing emulations in terms of axiomatics or quantification via a unifying theory.
-Instead, in this dissertation, we discuss the symbolic representations that exist prior to analysis and effects of interpretive frameworks on the generation of emulations from the context of:
+A complete description of the problem acknowledges mathematics does not confer existence upon its subject and adopts conceptual or empirical strategies into the execution and analysis of unknown system features.
+That is, in this dissertation, we focus on the symbolic representations that exist prior to analysis and effects of interpretive frameworks on the generation of emulations from the context of:
 
 \begin{enumerate}
 	\item the synthesis of hardware models from software information~\cite{johnson2021jetset} (Chapter~\ref{chap:rehost}),
@@ -148,7 +148,7 @@ Our contributions are therefore as follows:
 		We implement a system adopting this approach and use it to extract control equations from real-world firmware, emulate the associated systems behavior, and develop a precise destabilization attack on a chemical plant's reactor pressure (Chapter~\ref{chap:integreat}).
 \end{enumerate}
 
-To the extent that it is safe, we have released software code and tools for all associated techniques: JetSet~\cite{jetsetsource}, which applies symbolic execution to rehosting, Edact-Ray~\cite{deredactionsource}, but only the portions relating to the location and defense of vulnerable redactions, and InteGreat~\cite{integreat}, for lifting using a logic-based intermediate representation.
+To the extent that it is safe, we have released software code and tools for all associated techniques: JetSet~\cite{jetsetsource}, which applies symbolic execution to rehosting, Edact-Ray~\cite{deredactionsource}, but only the portions relating to the location and defense of vulnerable redactions, and InteGreat~\cite{bland2023integreat}, for lifting using a logic-based intermediate representation.
 Each of these systems has been applied to real-world case study systems with verifiable results.
 The most impactful of these is Edact-Ray, which has identified vulnerabilities and hidden information in a number of important documents (Sec.~\ref{sec:redaction-attack} and Sec.~\ref{sec:redaction-ethics}); the full version of the tool now sees continued use by the US courts and the US OIG.
 Jetset was able to sucessfully rehost thirteen distinct peices of firmware (Sec.~\ref{sec:jetset-eval}) and an associated system-mode QEMU fuzzer was able to reproduce and identify identical codepaths across real and Jetset-emulated copies of both Linux system calls on the Raspberry Pi 2 and VRTX system calls on the CMU-900 (Sec.~\ref{sec:jetset-attack}).
