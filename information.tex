@@ -1,16 +1,691 @@
-\chapter{Simulation for Digital Forensics}
+\chapter{Digital Forensics Using Simulations}
 \label{chap:info}
+
+% In this chapter, we discuss several approaches for computing discrepancy
+% functions for dynamical systems. We start with the simplest case of stable
+% linear systems where Lyapunov equations can be used for computing discrep-
+% ancy. Then we move on to discuss nonlinear models and contraction metrics.
+% Next, we introduce one of the major contributions of this dissertation: a lo-
+% cally optimal approach for the discrepancy computation of general nonlinear
+% systems. Finally, we extend the method to compute reachtubes for hybrid
+% systems.
+
+In this chapter, we explore the application of sysem simulation for the purposes of digital forensics, particularly in the analysis of PDF documents.
+We begin by introducing facets of the PDF format and redaction software that are relevant to the analysis of redacted documents.
+Then we move on to discuss the extraction of models of PDF producing software, and the use of universally quantified inputs in determining the text that is removed during redaction.
+We then introduce the most impactful discovery covered in this dissertation: the fact one to two word \emph{exising} redactions, where the text is removed from the page, do not actually work.
+Finally, although it is not immediately related to emulation, we see it necessary to discuss the ethical implications of these findings as they present a significant threat to individual privacy.
 
 \section{Introduction}
 
-\section{Recovering Algorithms}
+As noted in the last chapter, the one core element of emulation is the modeling of unknown components of the system, and one approach to this problem is \emph{universal quantification}, which tries every possible match for the missing information.
 
-\section{Redaction Case Study: Shifting Schemes}
+The representation of missing information is no better encapsulated than by the centuries-old process of redaction, which removes or obscuring parts of a document to prevent its disclosure. 
+In the past this was performed by black marker or by physically cutting parts of the document out with scissors.
+However, with the move to digital, paperless representations of documents, the process of redaction is typically performed by software tools.
+The process of removing information from digital documents is error-prone, as demonstrated by several high-profile examples~\cite{embarassingRedact}.
+However, while past work has considered the possibility of supplying all inputs to a system in a \emph{brute-force} attack, no existing work has considered the role the PDF file representation plays in redaction security, and redaction's vulnerability to such guess and check attacks.
 
-\section{Redaction Case Study: Deredaction Attacks}
+In this chapter, we begin by noting that the width of the characters in a proportional-width font can leak information about redacted text, and extend this notion of leaked information to the PDF file's representation of sub-pixel-sized chatracter positioning shifts.
+These shifts can be used to decude far more information about redacted text than width alone, and failing to understand these shifts exist leads to incorrect or imprecise deredaction, serving as a useful parable for the more general field of modeling systems.
+
+We were the first to identify this problem of sub-pixel shift information, leading us to measure the severity of information leaks in PDF text redactions.
+We discovered methods for breaking redactions occurring on documents processed by optical character recognition (OCR) software and find that \emph{rasterizing} a document (converting the PDF to an image) increases the security of redactions but does not remove information leaks.
+We also find a typical PDF document authored in Microsoft Word leaks about 13 bits of information about a redacted surname. 
+This is enough for an attacker to identify a single individual from 8,000 candidates (say, employees at a company or potential confidential informants in a gang), or reduce the 3.9 million possible first initial, surname pairs from US census and Social Security Administration data to a set of only 200 potential matches for a redacted name.
+
+Although it did not relate to our core theme of universal quantification, we also considered \emph{nonexcising} redactions which do not remove any text from the document, and leave it directly encoded in the original PDF file.
+The text of these redactions can be copied and pasted from the source document.
+Our study and techniques located thousands of nonexcising redactions in US court documents, resulting in our notification of both the US court system and the Free Law Project about these redactions.
+
+To understand the methods by which systems leak redacted information, we examined 11 popular PDF redaction tools and find that two do not work at all.\footnote{As these findings are not entirely relevant to the subject of this dissertation beyond the minor application of dynamic analysis, we refer readers to the original paper for more details on redaction tools~\cite{bland2023story}.}
+These two tools leave the text underneath the selection marked for redaction in the PDF document.
+The remaining tools, including those from Adobe Systems, remove the redacted text and replace it with a black rectangle.
+Without additional defenses, this practice leaks significant glyph shifting information which can be used to deduce redacted text.
+
+We built a tool Edact-Ray, which \emph{simulates} the operation of common PDF production software, such as Microsoft Word, and contains analysis subsystems which can be used to identify, break, and fix redaction information leaks across millions of PDF files.
+Using dictionary attacks on these simulations, Edact-Ray allows an attacker to test which strings from a dictionary of candidates create the same PDF output as the original redacted PDF file.
+We applied Edact-Ray to study the impact of our findings on three publicly-available corpora of PDF documents, breaking redactions in several documents of historical importance.
+
+The resulting findings present a clear invasion of privacy for people whose names have been redacted and may be used to circumvent redactions used in censorship.
+Thus, we have notified more than 22 organizations whose redacted documents were affected, as well as vendors of leaky PDF production and broken redaction tools, and continue to work with several of these groups to remediate the problem.
+
+In the following sections, we provide the reader with the necessary background to understand how these redactions are broken through simulation and modeling of glyph positioning algorithms.
+
+\section{Background on PDF Text Representation}
+
+The security of PDF text redaction depends on the specification of the PDF document.
+We consider two types of PDF documents.
+One is a raster image of the original document.
+The other PDF document type contains text data for both the font and the layout of each character (\emph{glyph}) on the page.
+We focus our discussion on non-raster PDF documents, however, the concepts presented apply to raster PDF documents.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=3.50in]{tj.pdf}
+    \caption{The TJ text showing operator, which specifies the glyphs to render and, by reference to a font object (not shown), their widths.}\label{fig:tj}
+\end{figure}
+
+PDF documents can render text in innumerable ways (e.g. by embedding an image in the document), though the most common is through use of a text showing operator, one of which (TJ) is depicted in Figure~\ref{fig:tj}.
+The TJ operator takes as arguments a string of text and a vector of \emph{positional adjustments} which displace the character with respect to a default position.
+This default position is usually a fixed offset from the previous character equivalent to the \emph{advance width} of the previous character defined elsewhere in the PDF document.
+
+For our analysis, we converted the complex set of PDF text rendering operations into a uniform \emph{intermediate representation}, consisting of a minimal set of metrics (e.g. font size) and a series of TJ operators.
+The intermediate representation presents PDF text as, effectively, a set of advance widths and \emph{glyph shifts} which are the sum of all the individual positioning operations applied to a glyph.
+This conversion was necessary to account the large number of ways in which text can be rendered in PDF documents.\footnote{For example, in the case of a TJ operator, the actual \emph{glyph shift} includes any offset due to a positional adjustment as \emph{part} of the calculation of its value.}
+
+The positional adjustment in Figure~\ref{fig:tj} is $-2$ \emph{text space units} between the \emph{h} and \emph{i} glyphs.
+Text space units express glyph shifts, where 1,000 units almost always\footnote{PDF offers the ability to redefine the text space and Edact-Ray accounts for this.} equals the point size of the font times 1/72 of an inch.
+For a 12-point font, 1 unit equals 1/6,000 of an inch (0.0042~mm).
+
+Glyph advance widths and glyph shifts create a security concern, as an attacker can supply all possible \emph{inputs} to a simulation or high-level emulation of the tool used to create the document and create two significant security risks:
+
+\begin{itemize}
+    \item The precise width of the redaction can be used to eliminate potential redacted texts (Sec.~\ref{sec:equiv-class}).
+    \item Any non-redacted glyph shifts conditioned on redacted glyphs can be used to eliminate potential redacted texts (Sec.~\ref{sec:ms-word}).
+\end{itemize}
+
+\begin{table*}
+  \small
+  \centering
+  \caption{Several possible PDF workflows. The left column indicates the operations which to produce the representation on the right.}
+  \label{tab:flows}
+  \input{flows}
+\end{table*}
+
+Examples of these output glyph width and shift descriptions as given by the PDF format are provided in Table~\ref{tab:flows}.
+In this table, ``Edge/Firefox, Print/PDFViewer, Save'' can be interpreted as ``using the edge or firefox browsers’ PDF viewer or print dialog, hit save'' and results in the right column's displacements.
+We do not include strings of numbers in our analysis as digits' glyph advance widths and effect on glyph shifts is almost always identical, making them effectively monospace, even if typeset in a variable-width font. Some uncommon fonts may have non-identical digit glyph advance widths.
+
+\subsection{Glyph Shifts}
+\label{sec:schemes}
+
+The width of a PDF redaction depends on glyph shifts.
+Without accounting for glyph shifts, redacted text guesses are imprecise and must account for error, reducing the potential of finding a unique match for redacted content.
+The glyph shifts present in a PDF document are dependent on the specific \emph{workflow} used to produce the PDF document.
+This includes an originating software, called the \emph{PDF producer} by the ISO 32000 PDF standard~\cite{pdfTwo}, and any software that may modify the PDF file contents thereafter, including, for example, a redaction tool.
+A given workflow creates a specific pattern of glyph shifts, determining, in part, the security of any redacted text.
+We identify two types of glyph shifting schemes:
+
+\begin{itemize}
+    \item \emph{Independent}: the glyph shifts for a given character are not dependent on any other character in the document in any way.
+    \item \emph{Dependent}: the glyph shifts for a given character are dependent on some other character in the document in some way.
+\end{itemize}
+
+These correspond to the notions of dependent and independent information in the recovery of models of systems introduced in Chapter~\ref{chap:prelim}.
+We call independent schemes \emph{unadjusted} when there are no shifts on any character.
+Google Docs' \emph{Export to PDF} option produces an unadjusted scheme.
+
+\subsubsection{Equivalence Classes.} 
+\label{sec:equiv-class}
+Before discussing these schemes further, we introduce the idea of width and shift equivalence classes.
+A shift equivalence class is a set of lists of glyphs of the same length with identical shift values.
+A width equivalence class is a set of glyphs and associated shifts with the same width.
+
+\begin{table}\centering
+\caption{Glyph width equivalence classes for the specific default version of
+    Times New Roman used by Microsoft Word.}
+\label{tab:tnr-glyph-widths}
+\small
+\begin{tabular}{@{\quad}ll@{\quad\quad\quad}ll}
+569 & ijlt & 1251 & ELTZ \\
+683 & Ifr & 1366 & BCR \\
+797 & Js & 1479 & ADGHKNOQUVXYw \\
+909 & acez & 1593 & m \\
+1024 & bdghknopquvxy & 1821 & M \\
+1139 & FPS & 1933 & W
+\end{tabular}
+%\begin{tabular}{ll@{\quad}ll@{\quad}ll}
+%569 & ijlt & 1024 & bdghknopquvxy & 1479 & ADGHKNOQUVXYw \\ 
+%683 & Ifr & 1139 & FPS & 1593 & m \\
+%797 & Js & 1251 & ELTZ & 1821 & M \\
+%909 & acez & 1366 & BCR & 1933 & W
+%\end{tabular}
+\end{table}
+
+Table~\ref{tab:tnr-glyph-widths} gives an example of the width equivalence classes for glyphs in a Times New Roman font\footnote{
+    Different versions of a font can exist. 
+    We use the default versions available from Microsoft throughout this paper.
+} without shifts, next to their widths as specified by the font file.
+Each number is the width in given to the glyph by the font file and each set of letters has equivalent widths.
+The glyphs \emph{I}, \emph{f}, and \emph{r} are exactly half the width of the glyphs of \emph{B}, \emph{C}, and \emph{R}. 
+When typeset using Times New Roman, the words \emph{martian}, \emph{templar}, and \emph{mineral} all have the same width, as do the anagrams of those words \emph{tamarin}, \emph{trample}, and \emph{railmen}.
+
+The PDF specification does not include any specific signifiers for redacted text.
+However, residual specification information after redaction, such as glyph positions, can be used to reasonably rule out large numbers of candidate width and shift equivalence classes for redacted text.
+None of the prior words in this paragraph are in the width equivalence class of the word \emph{cat}.
+
+\subsubsection{Independent Schemes.}
+\label{sec:gdocs}
+\label{sec:adobe-ocr}
+
+In an independent glyph shifting scheme, the security of a redaction may be considered dependent on the size of the width equivalence class indicated by the PDF document's residual glyph positioning information.
+That is, the positions of glyphs prior to and succeeding the redaction may leak the width of redacted text.
+The scheme's specific glyph shifts can make a given width equivalence class leak more or less redacted information by making width of individual glyphs more or less unique.
+
+As an example, consider redacting a single letter \emph{l} as opposed to \emph{m} in the Times New Roman (TNR) scheme from Table~\ref{tab:tnr-glyph-widths}.
+\emph{m} is the only glyph in its width equivalence class, so it may be possible to determine the letter \emph{m} was redacted uniquely.
+Whereas if \emph{l} is redacted, then the residual information indicates the redacted letter could be any one of \emph{i}, \emph{j}, \emph{l}, or \emph{t}.
+However, if \emph{l} were always accompanied by a glyph shift distinguishing it from these other three letters, then the scheme would leak more information.
+
+We acknowledge that there is no \emph{guaranteed} correlation between glyph positions before and after redaction.
+Redaction may reposition glyphs in such a way as to destroy accurate width information.
+However, we found this is almost never the case for commonly accessible redaction tools~\cite{bland2023story}.
+We were also informed that in some contexts there are (legal) restrictions on changing the glyphs or glyph positioning of a redacted document.
+
+\emph{Scanned Documents.}
+Many documents with independent shifting schemes are the result of an optical character recognition (OCR) process.
+This process embeds a non-raster representation of the document's text in the resulting PDF document.
+This often allows the document's text to be searched and copied from by software tools.
+
+Non-raster deredaction attacks work on documents that are scanned, OCRed and then redacted, not on documents that are redacted, scanned, and then OCRed.
+We note that attacking the OCR overlay is not always as straightforward as attacking a PDF produced without OCR, and requires a separate model or simulation.
+
+\subsubsection{Dependent Schemes.}
+\label{sec:ms-word}
+
+A dependent scheme is more dangerous to the security of redacted text than an independent scheme.
+In these schemes non-redacted glyph shifts can be dependent upon redacted glyph information, because the non-redacted glyph shifts can be determined \emph{before} redaction (Sec.~\ref{sec:tools}).
+
+\emph{Microsoft Word ``Save as PDF''.}
+In this chapter, our primary simulations model a class of dependent schemes defined by the Microsoft Word software's \emph{Save As PDF} command.
+We reverse-engineered the glyph shifting scheme produced by this command in Microsoft Word for Windows desktop versions 2007 to 2019.
+This process took around several months. 
+Word 2007 to 2016 use one scheme, and Word 2019 to present versions use another.
+These two schemes affect thousands of real world document redactions (Sec.~\ref{sec:redaction-attack}).
+
+\lstset{ %
+language=C++,                % choose the language of the code
+basicstyle=\ttfamily\footnotesize,       % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=single,           % adds a frame around the code
+tabsize=2,          % sets default tabsize to 2 spaces
+captionpos=b,           % sets the caption-position to bottom
+breaklines=true,        % sets automatic line breaking
+breakatwhitespace=false,    % sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)}          % if you want to add a comment within your code
+}
+
+\begin{figure}
+\begin{lstlisting}
+for (int j = i + 1; j < vs->size(); j++) {
+    t = ttfScaledWidths[j] / 1000;
+    d = internalMSWordWidths[j] / internalMSWordFontSize;
+    ttf += t;
+    msWord += d;
+    disp = ttf - msWord;
+    if (
+        ((disp > 0.003) || (disp < -0.003)) && 
+        i != vs->size() - 1
+    ) {
+      int adj = disp * 1000 + 0.5;
+      vs->setShift(j, adj);
+      ttf = msWord = 0;
+    } else {
+      vs->setShift(j, 0);
+    }
+}
+\end{lstlisting}
+\caption{Snippet of reverse engineered code representing how Microsoft Word leaks redacted character information into non-redacted characters in a PDF document.
+    }
+\label{fig:msword-snippet}
+\end{figure}
+
+
+The studied dependent schemes accumulate a What You See Is What You Get (WYSIWYG) error measurement for each glyph from left to right across each line of text.
+If redacted content is not removed from a Word document before running ``Save as PDF'', redacted glyph positioning information affects the accumulated error value.
+\emph{Thus information about the content of a redaction is leaked into the shifts applied to non-redacted characters.}\footnote{Different text justifications can leak \emph{more} information.}
+
+Figure~\ref{fig:msword-snippet} depicts this behavior.
+Word's internal representation of the layout of characters for display purposes does not exactly match that of the TrueType Font (TTF) embedded in the PDF document.
+Word corrects for this small error between the two formats through use of glyph shifts.
+Surprisingly, these modifications are done independent of the user's screen resolution.
+
+We note the internal widths used on line 3 of Figure~\ref{fig:msword-snippet} are determined by a loop with no overflow reset and the redacted information held by the accumulator \emph{is not zero} after a single shift is written.
+We refer the reader intereseted in the specific details of this algorithm to our original paper~\cite{bland2023story}.
+
+Word's shifting scheme depends on the document's edit history. 
+Changing a character inside of a Microsoft Word document splits the internal representation of the text fragment containing the character into two fragments. 
+This fragmentation resets the accumulation of glyph width error and affects the shifts emitted for a line of text. 
+Edact-Ray accounts for this by simulating all potential edits to redacted text.\footnote{
+    We found edits have no significant impact on the efficacy of deredaction, as the information leaked is \emph{at least} as much as an independent glyph shifting scheme.
+    }
+
+We validated our Word model on hundreds of lines of Wikipedia text rendered to PDF by Word, several manually-crafted test cases, and text fragments from redacted documents found in the wild.
+
+\input{defs}
+
+\paragraph{Locating Redactions}
+Briefly, to evaluate our forensic capabilities, we also developed a redaction location algorithm for PDF documents, based upon an implicit model of how redaction often appear as outputs of PDF document redaction systems.
+
+For nonexcising redactions, we first detected filled boxes drawn over text.
+This creates a large number of false positives as it does not consider whether the rectangles are actually covering text in a meaningful way, so we also check whether the pixels in the bounding box of each PDF glyph are all the same color.
+This does not handle complex cases (e.g. using an image to redact text), but we did not find cases of these more complex styles of redaction in practice.
+
+We manually validated this nonexcising redaction location algorithm on PDF documents from RECAP, a website hosting US court documents, and discovered a false positive rate of 4\%.
+An additional 7\% of these documents properly changed the underlying text (e.g. to REDACTED) or contained unintended redactions (e.g. a black box covering non-sensitive text).
+This resulted in \numRECAPredactionDocs\ documents with nonexcising redactions, many of which included entire paragraphs of text.
+The algorithm encounters false negatives when it cannot identify rectangular draw commands.
+We did not encounter false negatives: redaction draw commands are rarely ambiguous enough to prevent detection.
+
+For excising redactions, we first identified spaces larger than a single space character between each pair of words in a document.
+It then analyzes the pixel color values between the words to identify a drawn rectangle.\footnote{
+    We did not attempt to locate redactions without some visually signifying feature.
+}
+We evaluated our excising redaction location algorithm's accuracy on a random sample of 1,000 redacted pages from real-world documents, and compared against Lee's~\cite{timblee} prior work on redaction location and against manual identification.
+Lee's method flags every black rectangle drawn as a redaction and has a high false positive rate for some classes of documents (around 30\% for FOIA and nearly 100\% for RECAP).
+With respect to false positives and false negatives, our algorithm is equivalent to manual analysis when locating what we deem to be vulnerable redactions.
+
+\section{Modeling and Simulating Glyph Shifting}
+
+For a given PDF generation and glyph positioning workflow, it is possible to construct a precise simulation or model of the workflow's operation and layout of glyphs.
+In this chapter, the process was peformed using WinDBG's data flow analysis~\cite{timetravel} and a series of carefully crafted scripts for extracting information on how glyph positions are decided.
+
+\paragraph{Extraction of System Simulations}
+To extract simulations of glyph shifting schemes for Microsoft Word, Adobe Acrobat, and other systems, we began by recording an execution trace of the production of a PDF document.
+In this document, we included easily identifiable text fragments, such as ``Lorem ipsum'' and ``redacted'', which excercised the glyph shifting scheme.
+Because a given software workflow can split its operations across multiple threads, we performed this recording in a virtual machine emulation running on a single core.
+Then, we scripted WinDBG to identify the last use of a \texttt{rep movs} operation with a pointer to the indentifiable string.
+
+\lstdefinelanguage{JavaScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\begin{figure}
+\begin{lstlisting}[language=JavaScript]
+function handleInternalWidths() {
+    let Regs = host.currentThread.Registers.User;
+
+    let iWi = host.parseInt64(Regs.eax);
+    /* hack to identify the newline character */
+    if (iWi < 0x500) {
+        let internalWidth = iWi.toString(10);
+
+        internalWidths[characters[pos]] = internalWidth;
+        pos += 1;
+
+        if (pos == characters.length) {
+            internalWidthsArr.push(toJson(internalWidths));
+            internalWidths = {};
+            pos = 0;
+        }
+
+        lineend = !lineend;
+    }
+
+    return false;
+}
+
+function invokeBP(bpCmds) {
+    let Control = host.namespace.Debugger.Utility.Control;
+
+    Control.ExecuteCommand('bc *');
+    host.diagnostics.debugLog("Rewinding Execution...\\n");
+    Control.ExecuteCommand('g-');
+    host.diagnostics.debugLog("Done\\n");
+    for (var i = 0; i < bpCmds.length; i++) {
+        Control.ExecuteCommand(bpCmds[i]);
+    }
+    host.diagnostics.debugLog("Invoking BP...\\n");
+    Control.ExecuteCommand('g');
+    host.diagnostics.debugLog("Done\\n");
+}
+
+function invokeScript() {
+    invokeBP(['bp /w "@\$scriptContents.handleInternalWidths()" 0x65567138']);
+    for (var i = 0; i < internalWidthsArr.length; i++) {
+       host.diagnostics.debugLog(internalWidthsArr[i]);
+    }
+}
+\end{lstlisting}
+\caption{Example script for extracting the internal width map from Microsoft Word.}
+\label{fig:extraction-script}
+\end{figure}
+
+This resulted in roughly five different identifiable code paths under which the specific glyph shifts were decided.
+Code paths were discovered by using \emph{time-travel debugging} to trace the operation which last operated on a data value using a script.
+The binary code for these paths was then extracted, decompiled, and then translated to a C-code representation that could be compiled as a standalone binary.
+Beyond the strict operational semantics of the system, it was also necessary to extract certain dictionaries from the binary, such as the internal width map used by Microsoft Word in order to determine the coordinate space ``error'' between Word's internal representation and the output PDF representation.
+We provide an example of a script which extracted such a dictionary in Fig.~\ref{fig:extraction-script}.
+This script operates on an execution trace recording of the production of a PDF with a separate glyph rendered on each line, e.g. ``a'', ``b'', ``c''.
+In addition to the above, a final manual analysis step was required to identify the \emph{types} used in certain operations, e.g. float vs. double, as small floating point errors would have dramatic effects on output shifting information.
+
+\paragraph{Universal Quantification of Inputs}
+With C-code simulations extracted from respective PDF document production and redaction systems, it was then possible, for a given line of redacted text, to universally quantify all possibilities for the redaction's content.
+This dictionary attack aims to reproduce exactly the original behavior of the system when the document under analysis was produced: Edact-Ray measures the security of a given redaction by developing an information fingerprint (i.e. a hash of the width and shift equivalence classes) of all leaked glyph positioning information from the simulation.
+For each attempted guess at the redacted content, Edact-Ray matches the information fingerprint for this guess to the fingerprint of the same information recoverable from the source document.
+
+If the guess information fingerprint does not match, that guess is ruled out as a potential redacted content. 
+Thus, Edact-Ray's results are only as good as the dictionary which it quantifies over, and if the redacted text is not in the dictionary, Edact-Ray may return incorrect or no results, thus it is important to understand that in the determination of unknown facets of a system, it is impossible to \emph{discover} the ground truth unless it is also possible to guarantee the dictionary used to guess and check is sound.
+Thus, while the generation of potential dictionaries could be automated using machine learning, we chose to perform this step manually in order to exclude a potential source of error.
+We also used dictionaries consisting of multiple variations of possible redacted terms in order to minimize the chances of not including the correct redacted content in our guess dictionary, and performed extensive validation of our results wherever possible.
+
+Running on an eight-core consumer laptop (a ThinkPad T420) and simulating the Microsoft Word shifting scheme discussed in the previous section, Edact-Ray performs 80,000 guesses per second.
+
+\section{Breaking Redactions}
 \label{sec:redaction-attack}
 
-\section{Privacy and Ethics}
+Given the Edact-Ray tool, it was now possible to measure the security of redactions in a variety of real-world PDFs and synthetic cases.
+First, we were able to quantify the exact amount of information each shifting scheme leaked using a set of \emph{synthetic} redactions, where we attempted redaction on text with known ground truth.
+For this we used text from the New York Times Annotated Corpus~\cite{nytCorp}.
+Then, we explored whether redactions in real-world documents could fall victim to these same simulation-based attacks, and quantified the number of broken redactions across thousands of PDFs.
+
+\paragraph{Dictionaries}
+The amount of information leaked also depends on prior information about the redacted text. 
+For example, if we know the redacted text is one of \neltln\ American surnames, then this redaction leaks at most $\log_2 \neltln \approx \hxln$ bits.
+In our experiment, we model this prior information as a \emph{dictionary}, a set of strings from which we assume the redacted text is drawn.
+
+Based on an examination of real redactions, we constructed 10 dictionaries.
+
+\begin{itemize}[nosep]
+\item\textit{Str.} All strings of 3--16 characters in length starting with a uppercase or lowercase letter followed by lowercase letters.
+\item\textit{Acrn.} All strings of 2--5 uppercase characters.
+% \item\textit{Pron.} English third-person pronouns which are often redacted to avoid revealing a person's gender.
+\item\textit{Word.} English words including some proper nouns.
+\item\textit{Ctry.} Official and common names of countries.
+\item\textit{Rgn.} Names of regions, a superset of \emph{Ctry}.
+\item\textit{Natl.} Nationalities, demonyms, and adjectives of regions and nationalities, sourced from lists on Wikipedia.
+\item\textit{FN.} American given (first) names.
+\item\textit{LN.} American surnames (last names).
+\item\textit{FI$\times$LN.} All combinations of a name initial followed by surname (\emph{LN}).
+\item\textit{FN$\times$LN.} All combinations of a given name (\emph{FN}) followed by a surname (\emph{LN}).
+\item\textit{FNLN and FILN.} \emph{FN$\times$LN} and \emph{FI$\times$LN} filtered to only include combinations of name and surname that appear in the voter registration databases of the three US states.
+    North Carolina~\cite{ncVoterData}, Ohio~\cite{ohVoterData}, and Washington~\cite{waVoterData} were chosen based upon the availability of publicly accessible data.
+\end{itemize}
+
+Table~\ref{tab:dicts} lists the dictionaries and their statistics.
+\emph{NYT Occ.} gives the number of occurrences of words from the given dictionary in the NYT corpus.
+$H_u(X)$ is the uniformly distributed information-theoretic entropy of the dictionary, given by $\log_2 \mathit{Size}$.
+For individuals' names, $H_e(X)$ is the entropy of the empirical distribution of dictionary words in the voter registration databases, and for all others it is according to the NYT corpus.
+
+We use the voter registration database frequency for individuals' names to avoid bias present when using the NYT corpus to estimate the frequency of a given name.
+For example, ``Al Gore'' is more frequent in the NYT corpus than the population.
+Using the NYT for names would skew the results in our favor.
+We opted to provide a general representation of deredaction's efficacy where nothing is known about the name in question beyond population statistics.
+
+The voter registration databases contained \num{1.7e7} names total.
+Note that if this measure was used instead of \emph{NYT Occ.}, FN, LN, FILN, and FNLN would be identical to the population size.
+
+Columns $H_u(X)$ and $H_e(X)$ are an \emph{upper bound} on the amount of information a document can leak about a redacted element of that dictionary.
+If the amount of information leaked is equivalent to these numbers, then every word in the dictionary can be uniquely identified by leaked information when redacted.
+
+Compared to the brute force approach of using \emph{all possible} name combinations, using voter registration databases makes deredaction highly precise.
+However, we do not use \emph{FNLN} and \emph{FILN} in our evaluation of real-world documents because we do not want to bias our results by assuming what state the person (whose name was redacted) votes in or whether they are registered to vote.
+
+\begin{table}
+\centering
+\caption{
+    Dictionaries containing candidate texts used for evaluating deredaction. 
+    Stop words are excluded from the statistics.
+}\label{tab:dicts}
+\small\input{dicts}
+\end{table}
+
+\paragraph{Synthetic Evaluation}
+We simulate redaction in a PDF created with unadjusted, Word 2007 and Word 2019 ``Save as PDF'' shifting schemes, in 10 point Times New Roman, Calibri, and Arial, the three most common fonts in our real-world document corpora, discussed next.
+These fonts account for 71.6\% of lines in the 40,000 documents we studied.
+We include Courier as an example of a monospaced font.
+The simulated PDF, formatted for US Letter size paper, is left-justified with 1-inch margins, giving a 468 point line width.
+
+We use a 10 point font size for our experiments as an upper bound on the amount of leaked information.
+Our original publication also includes results for a 12 point font size~\cite{bland2023story}.
+Because each 12 point line has fewer characters, the larger font size leaks a little less information overall.
+
+\label{sec:mutinfmethod}
+We parameterize each redaction with experimental parameters of shifting scheme, font size, font, and dictionary.
+We then perform the following steps:
+
+\begin{enumerate}[nosep]
+\item Choose some word from the corpus that occurs in the given dictionary.
+\item Format a PDF document containing the chosen word and surrounding text from the corpus using the parameterized font and shifting scheme.
+\item Replace the chosen word at the point with each word in the parameterized dictionary (either uniformly or according to the frequency distribution).
+\item Redact the dictionary word by replacing it with a glyph shift equal to its width.
+\item Record the leaked information fingerprint for this dictionary word.
+\end{enumerate}
+
+In summary, we simulated the redaction of all possible dictionary words at a sample of occurrences of dictionary words in the NYT corpus.
+We then computed the amount of mutual information leaked by the redacted document $Y$ about the redacted word $X$.
+The amount of information leaked by the redacted document $Y$ about the redacted word $X$ is given by the mutual information $I(X,Y)$.
+Let $L$ be a random variable representing the location of the occurrence of the dictionary word chosen in our first evaluation step, and $H$ denote entropy.
+Note that $H(Y|L,X) = 0$ (there is no uncertainty about $Y$ given $L$ and $X$), since the formatting and redaction in steps 3 and 4 are deterministic, and $H(L|X,Y) = H(L|Y) = 0$ (there is no uncertainty about the location of the redaction given the document after redaction). 
+Using these two facts,
+
+\begingroup\small
+\begin{align*}
+I(X&;Y) = \\
+&= H(X) - H(X|Y) \\
+&= H(X) - H(X,Y) + H(Y) \\
+&= H(X) - H(L,X,Y) + H(L|X,Y) + H(L,Y) - H(L|Y) \\
+&= H(X) - H(Y|L,X) - H(L,X) + 0 + H(L,Y) - 0 \\
+&= H(X) - 0 - H(L) - H(X) + H(Y|L) + H(L) \\
+&= H(Y|L) \\
+&= \sum_\ell Pr[L=\ell]\cdot H(Y|L=\ell).
+\end{align*}
+\endgroup
+
+Thus, $I(X;Y)$ is the average, taken over redaction locations, of the entropy of $Y$, that is, the entropy of the distribution of possible documents after redaction. 
+For a large corpus and large dictionaries, calculating this quantity exactly is expensive. 
+Instead of calculating the exact value, we sample $H(Y|L=\ell)$ for several initial word choices.
+
+In addition to mutual information, we calculated the probability that the leaked information can be used to correctly guess the redacted word.
+In the uniform distribution this is a random guess from the (typically quite small) set of matching candidate words, and in the frequency distribution we select the candidate with the highest frequency in either the NYT corpus (for \emph{Str}, \emph{Acrn}, \emph{Word}, \emph{Ctry}, \emph{Natl}, and \emph{Rgn}) or in the three state voter registration databases (for \emph{FN}, \emph{LN}, \emph{\fnxlnname}, \emph{\fixlnname}, \emph{FNLN}, and \emph{FILN}).
+
+\begin{table*}
+\centering\small
+\caption{Number of bits leaked (left) and probability of a correct guess (right) for different shifting schemes in simulated redactions of the NYT corpus set in 10pt font.
+    }
+\label{tab:nyt10}
+\input{nyt10}
+\end{table*}
+
+\paragraph{Synthetic Results}
+Table~\ref{tab:nyt10} reports on the vulnerability of excising redactions.
+``Probability correct guess'' refers to the likelihood of randomly selecting the redacted word given the (typically small) set of matching candidate texts.
+The top half of the table shows the case where dictionary elements are drawn uniformly at random in step 3 above and the bottom half shows the case where dictionary elements are drawn according to their frequency of occurrence in the NYT corpus or, in the case of names, in the three states' voter registration databases. 
+We have omitted rows for the \emph{\fnxlnname} and \emph{\fixlnname} dictionaries from the bottom half because they are identical to the \emph{FNLN} and \emph{FILN} results, respectively.\footnote{
+We considered using the empirical distribution generated by the independent distributions of first and last names in the voter registration databases.
+However, the distribution of first names is \emph{not independent} of the distribution of surnames due to cultural naming conventions. 
+}
+
+The left side of the table shows the mutual information of the dictionary and the resulting document.
+This is the number of bits of information leaked by the document about the redacted word.
+These should be compared to the total entropy of the corresponding dictionary given in Table~\ref{tab:dicts}.
+
+The right side of the table gives the probability correctly guessing the redacted text using only the information available after redaction.
+This corresponds to success probability of a game in which a player knows the dictionary and tries to guess the redacted word based information in the redacted document.
+In the non-uniform case, the optimal strategy is to guess the most likely (the highest occurrence frequency) word or phrase that produces the same redacted document.
+
+The table gives statistics for four fonts: Courier, Times New Roman, Arial, and Calibri.
+For each font, we show the amount of information leaked by an unadjusted shifting scheme (\nadjshortname), text produced using Word 2007--2016 (\wxiishortname), and Word 2019--2021 (\wxxishortname) dependent glyph shifting schemes. 
+For Courier, we omit the \wxiishortname\ and \wxxishortname\ columns as monospaced fonts behave identically in the unadjusted and Word cases.
+
+Table~\ref{tab:nyt10} does not show results for the \emph{Str} dictionary under the uniform distribution using Word schemes because simulating redaction of all \neltstr\ strings is prohibitively expensive. 
+Results for the unadjusted positioning scheme were obtained without simulating redaction by exploiting the regular structure of the dictionary.
+
+We compare redaction vulnerabilities across three categories, using the example of redacting a surname set in 10 point Times New Roman font to guide the reader:
+
+    \textbf{Monospace (Mo).} For monospaced font redactions, the residual information in the document after redaction reveals the number of characters in the redacted word. 
+The Courier column in Table~\ref{tab:nyt10} thus tells us how much information is revealed by knowing the number of letters in the word.
+(For monospace fonts, which are always unadjusted, this is just the entropy of the distribution of word lengths.)
+For example, knowing only the number of characters in a surname leaks 2.9 bits of information (out of 17.2) when guessing uniformly at random from the candidate redacted texts.
+This has a $<1\%$ probability of success---redactions of monospace fonts are relatively secure.
+% If countries are ordered with respect to their frequency of occurrence in NYT text, knowing the length provides only 3 bits of information (though the number of bits needed to \emph{perfectly} deredact drops from 9.1 to 5.9).
+
+\textbf{Unadjusted (Un).} For independent shifting scheme redactions, e.g. a PDF produced by Google Docs, the residual width of the redaction leaks more information than the number of characters redacted.
+The width of a redaction of a surname (the \emph{\nadjshortname} row) with no glyph shifts provides 8.2 bits of information about the surname if it is chosen uniformly at random and 7.8 bits (out of 13.1) if it is chosen according to an empirical distribution. 
+While the uniform distribution still has a $<1\%$ probability of success, the empirical distribution has a $28\%$ probability of success.
+
+\textbf{Dependent (W07/W19).} For dependent shifting scheme redactions, the residual information after redaction leaks both width and shift equivalence classes and therefore more information.
+If we redact a surname from a PDF produced by Word 2007--2016, the resulting document leaks 12.4 bits of information about a name chosen uniformly at random and 10.8 bits when chosen according to the empirical distribution given by voter registration databases.
+With the inclusion of these information leaks, the probability of a correct guess under the uniform distribution is $11\%$ and the probability under an empirical distribution is greater than $50\%$.
+
+We found leaks of up to 15 bits of information about redacted text in dependent (Microsoft Word ``Save as PDF'') glyph shifting schemes.
+These schemes present a significant security concern for excising redactions.
+Even without considering the frequency of names in the population, single word redactions have a greater than 5\% chance of being broken.
+When an adversary can use statistical likelihoods of names, two word redactions of first names and surnames face a 1 in 5 chance of being broken, and an adversary's chances are only better for other fonts.
+
+Calibri, the default font in Microsoft Office since 2007, leaks the most information because the font has a greater variety of character widths than Times New Roman or Arial. 
+Recall that the empirical entropy of the surname dictionary is 13.1 bits (Table~\ref{tab:dicts}), so a redacted surname set in 10-point Calibri using a Word 2007 shifting scheme leaks almost all the information available and can be correctly deredacted in roughly 81\% of cases.
+
+In summary, short (1 to 2 word) excising redactions are NOT secure.
+Note these synthetic attacks and our real-world attacks are performed in a vacuum, using a full dictionary of US names.
+In practice, an attacker can use a smaller dictionary (e.g. company employees).
+
+\paragraph{Real-world Evaluation.}
+
+With our synthetic evaluation done, it became immediately apparent that understanding the applicability of our simulations to real documents was critcial.
+The generality of the results not immediately clear because glyph shifts may be modified by a variety of software workflows.\footnote{
+    For example, by opening the PDF produced by word \emph{and then} modifying it using Adobe Acrobat. 
+}
+It is also unclear whether there exist a significant number of vulnerable redactions in real documents.
+
+We consider both \emph{nonexcising} and \emph{excising} redactions in this section.
+We chose to study redactions of names (e.g. first names, surnames, and country names) in this section because they are the most common, discussed further below, and because their release presents a privacy concern.
+We do not release any of these names and have taken steps to notify affected parties in order to ensure no individual will be adversely affected by the present analysis (Section~\ref{sec:redaction-ethics}}).
+
+We evaluated the following document corpora: 
+
+\begin{enumerate}
+    \item \emph{FOIA.} Documents obtained via the US Freedom of Information Act (FOIA) on governmentattic.org~\cite{govattic}. 
+This corpus provides us with independently selected documents with some public interest.
+    \item \emph{OIG.} Office of the Inspector General (OIG) reports hosted by oversight.gov~\cite{oigReports}. 
+The OIG is a US Government oversight branch tasked with preventing unlawful operation of other government branches.
+This corpus allowed us to measure the impact deredaction may have on documents from a high-profile and large organization.
+    \item \emph{DNSA.} Digital National Security Archive (DNSA) documents produced after 2010~\cite{dnsaSite}. 
+The DNSA is a set of historical US government documents curated by scholars. 
+That is, we found redaction information leaks affect significant historical documents.
+    \item \emph{RECAP.} CourtListener's RECAP court document archive.
+RECAP mirrors PACER, the US Federal Courts' docketing system~\cite{pacerSite}, and contains over 10 million documents.
+We use RECAP to measure the impact of nonexcising redactions (discussed below).
+    \item \emph{rRECAP} the subset of RECAP documents returned for the search string ``redacted''.
+We chose to include rRECAP because running the excising redaction location algorithm mentioned on the entire RECAP corpus was both computationally and financially prohibitive.
+\end{enumerate}
+
+Only the RECAP corpus contained nonexcising redactions and our results for this corpus are reported with respect to nonexcising redactions.
+Our results for all other corpora are reported with respect to excising redactions.
+
+These corpora provide a sample of vulnerable documents and are not intended to be comprehensive analyses of any single affected party, e.g. government agency.
+
+We also chose to restrict our evaluation to first name and last name redactions.
+In a sample of 100 redactions from our corpora, 52 were personal names (determined manually based on the surrounding text), 26 were multi-word phrases too long to attack, 17 were numbers (not vulnerable to attack), 3 were pronouns (trivial to attack), and 2 did not have identifiable semantics.
+We included titles, (Mr., Mrs., Ms., and Dr.), initials, such as ``J.'' and ``S.'', and possessive forms, such as ``'s'', in our dictionary.
+However, our results for matches \emph{remove} these modifications, so ``Ms. Doe'', ``J. Doe'', and ``Doe'' count as a single match.
+
+Our final dictionary contained \nameDictSizeComb\ entries.
+We do not include \emph{\fnxlnname} as testing this dictionary takes 6 hours on an Intel Xeon Silver 4208, 2.10 GHz, 32-core server and the result sets are typically large.
+
+The only exclusion we made for this dictionary restriction was in our evaluation of the DNSA.
+The redactions matching the Microsoft Word dependent glyph shifting scheme in the DNSA were of an acronym, demonyms, and countries.
+
+We evaluate a redaction if:
+
+\begin{enumerate}[nosep]
+    \item The redacted text is present in the PDF (vulnerable to copy-paste attack); or
+    \item The redacted text is not present, but the document retains glyph shifting scheme information where:
+        \begin{itemize}[nosep]
+            \item The scheme matches a Word ``Save as PDF'' shifting scheme,
+            \item The redaction appears to be a name, e.g. ``Jane'', and
+            \item The redaction is the first from left to right on the line of text.
+        \end{itemize}
+\end{enumerate}
+
+These criteria provide a uniform and accurate proof-of-concept evaluation of the impact of the discovered redaction vulnerabilities.
+
+\paragraph{Real-World Evaluation Limitations.}
+We chose to restrict our attacks to the Microsoft Word schemes because these leak the most information, and are thus of the greatest concern.
+Other shifting schemes exist and evaluating these schemes' security will require further reverse engineering.
+Cases matching the Microsoft Word ``Save as PDF'' workflow represented 8.8\% of redaction instances across all four corpora.
+We also considered only the first redaction on a line to remove any dependence on prior correct guesses, which would be necessary to attack the second redaction on a line.
+
+Deredaction also requires modeling the glyph positioning scheme of the PDF document and identifying a dictionary of possible redacted texts.
+Despite some scripting possible using time-travel debugging, at the time of writing, this was a manual process.
+Therefore, we report the conservative \emph{Evaluated} row, which are redactions for which we were able to perform an automated attack given our modeled Microsoft Word positioning scheme.
+
+We also took three steps to ensure the results of our experiments were accurate:
+\begin{enumerate}
+    \item We required all potential deredactions to exactly match all present PDF glyph positioning information.
+    \item For excising redactions, it is necessary to identify the shifting scheme used by the PDF document.
+This process avoids incorrect matching and filters out regions of documents with idiosyncratic formatting.
+For example, Microsoft Word documents may have alternative layouts for text, e.g. text boxes, tables, and line numbers. 
+
+In the present analysis, we considered a PDF page to \emph{match} a scheme if we identify greater than 100 glyphs with shift values matching the scheme on the page.
+We only count entire lines: all of a line's glyph positioning information must match the scheme exactly to count toward the 100 glyph threshold.
+\item We manually classified each excising redaction as being a redacted name based upon the content of the surrounding text.
+We were conservative with our classification and only attack redactions we are \emph{certain} are of names.
+\item Where possible, we validated our findings using public information.
+\end{enumerate}
+
+We also identified redactions in documents using unadjusted and Adobe OCR glyph shifting schemes, though did not attempt to deredact these cases.
+These schemes leak 2--3 bits less information than documents produced by Microsoft Word.
+
+Finally, To make sure we were not missing any PDF documents originating from Microsoft Word, we also counted redactions within a 10 text space unit $L_{1}$ distance from our Microsoft Word model.
+These PDFs were the result of a non-standard workflow, e.g. creation using Word 365, the web interface for Microsoft Word.
+In our results, we label these redactions as \emph{Near Word}.
+
+\begin{table}
+  \centering
+	\caption{Potentially vulnerable redactions and glyph shifting schemes identified in redacted corpora pages. The ``Evaluated'' row is filtered for the length of the redaction (approx. 1 to 2 words), semantic context (being a name), and scheme (Word).}
+\label{tab:wildres}
+\small\include{tab/wild-res}
+\end{table}
+
+
+\paragraph{Real-world Results}
+\label{sec:wildres}
+The evaluation was able to find redacted information of significant public and historical relevance (not included).
+We begin by briefly discussing the non-excising redactions we located.
+We ran \maxray's location algorithm for nonexcising redactions on all of RECAP ($\approx10^{7}$ documents) and found \numRECAPNameredactions\ nonexcised redacted names in \numRECAPredactionDocs\ US court documents. 
+The number of total nonexcised redacted words was larger ($\approx$\num{1.4e5}).
+Of the redacted names, \numRECAPnadj\ had a independent glyph positioning scheme, \numRECAPocr\ used Adobe OCR, \numRECAPNearMSW\ were close to Word in $L_{1}$ distance, \numRECAPunk\ were not positioned using a scheme we modeled, and \numRECAPmsw\ exactly matched the Word positioning scheme.
+
+Due to the computational cost of locating excising redactions in the \emph{whole} of recap, we did not attempt to evaluate excising redactions for all US Court documents, though we confirmed some historically important court documents are affected.
+We also found \emph{no} nonexcising redactions in our other corpora (expected, as we were informed they have significantly more robust redaction workflows).
+
+Table~\ref{tab:wildres} also reports our findings on the security of excising redactions.
+The \emph{Evaluated} row reports the result of our redaction classification methodology.
+We identified 711 immediately vulnerable excising redactions in the FOIA corpus, 58 in the OIG corpus, 9 in the DNSA corpus, and none in rRECAP (mentioned above).
+
+We deredacted the FOIA and OIG cases using the full cross product dictionary \emph{\fnxlnname}, \neltfnln\ entries.
+For FOIA, we had three cases of a single, unique name being returned as the redacted text, \numFOIAavg\ possibilities returned on average (a 3,000-fold reduction), and \numFOIAmed\ on the median.
+For OIG, we had no cases of a single, unique name being returned as the redacted text, but \numOIGavg\ possibilities returned on average, and \numOIGmed\ on the median.
+After, we also validated many of these cases by looking up document details using google, and found an empirical distribution of name probabilities returned the correct deredacted name in several cases.
+The DNSA redactions were all of demonyms, and used the \neltnatl\ entry dictionary.
+This resulted in 5 cases of a single, unique name being returned as the redacted text, with 393 possibilities returned on average, and 1 match on the median.
+
+We find unmatched cases are common (382 cases in FOIA, 39 in OIG, and 1 in the DNSA).
+Manual analysis of nonexcising RECAP redactions found 28.2\% of names were of a form occurring in our dictionaries, leaving 71.7\% in other forms (e.g. first name, last name).\footnote{We chose to evaluate the simplest formatting ruleset possible for simplicity.}
+Our own unmatched case rate (54.7\%) was lower than expected, and indicating matches were reported but the name was not in the dictionary in approximately 17\% of cases.
+
+\paragraph{Real-world Validation}
+Given the danger of false positives, deredaction should be understood as \emph{ruling out} possible candidate texts rather than determining the content of a redaction.
+We manually validated our results for excising redactions (where possible on 8 PDF documents) by performing web searches for further information on the redacted document.
+For example, in the case of an OIG investigation, we would perform a search related to the offense committed and organizations affiliated.
+In this process, we found several cases where \maxray's returned matching name set included the ground-truth name.
+We did not find any cases where a matching set was reported and \maxray\ did not return the correct name as one of the results, though these cases likely exist.
+
+Nonexcising redactions provide ground truth, and we also used these redactions to validate our techniques.
+For every nonexcised redacted name in RECAP present in our dictionary, we excised the name, i.e. we removed the redacted text but preserved non-redacted glyph shift information.
+In all cases, the set of candidate texts returned by \maxray\ included the ground truth redacted word.
+
+\section{The Privacy and Ethics of Forensics}
 \label{sec:redaction-ethics}
 
 \section{Summary}

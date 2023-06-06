@@ -1,0 +1,82 @@
+%\begin{tabular}{l@{\hspace{-3pt}}r@{\hspace{6pt}}r@{\hspace{3pt}}r@{\hspace{3pt}}r|r}
+\begin{tabular}{lrr@{\hspace{3pt}}r@{\hspace{3pt}}r|r}
+  \toprule
+    Metric             & FOIA              & OIG              & DNSA                & rRECAP               & RECAP                     \\
+  \midrule
+Documents          & 3,145             & \oigNumDocs           & \dnsaNumDocs        & \recapNumDocs        & $\approx10^{7}$           \\
+  Pages              & \foiaPg           & \oigPg          & \dnsaPg             & \recapPg             & \numRECAPpages            \\
+  % Non-raster Pages &                   &                  &                     &                      & RECAP                     \\
+  Redacted PDFs      & 236               & 1255             & \dnsaNumDocsWRedact & \recapNumDocsWRedact & \numRECAPredactionDocs    \\
+  %Redacted Pages    & XXX               & XXX              & XXX                 & XXX                  & XXX                       \\
+  Redactions         & \foiaMetaRedact & \oigMetaRedact & \dnsaMetaRedact     & \recapMetaRedact     & \numRECAPNameredactions   \\
+  \ Unadjusted     & 2,844             & 314              & \unadjDNSA          & \unadjRECAP          & \numRECAPnadj             \\
+  \ Adobe OCR      & 3,406             & 1,814            & \ocrDNSA            & \ocrRECAP            & \numRECAPocr              \\
+  \ Near Word   & 175               & 114              & \mswDNSANear        & \mswRECAPNear        & \numRECAPNearMSW          \\
+  \ Unrec.   & \unrecFOIA &  \unrecOIG         & \unrecDNSA          & \unrecRECAP          & \numRECAPunk              \\
+  \ Exact Word     & 4,694             & 455              & \mswDNSAExact       & \mswRECAPExact       & \numRECAPmsw              \\
+  Vulnerable       & 711               & 58               & 9                   & 0                    & \numRECAPmsw              \\
+  \midrule
+    No Matches          & \numFOIAUnmatched & \numOIGUnmatched & 1                  & --                   & N/A                        \\
+  Uniq. Matches      & \numFOIAUniq      & \numOIGUniq      & 5                  & --                   & N/A                        \\
+  Avg. Matches        & \numFOIAavg       & \numOIGavg       & 393                  & --                   & N/A                        \\
+  Med. Matches        & \numFOIAmed       & \numOIGmed       & 1                  & --                   & N/A                        \\
+  \bottomrule
+\end{tabular}
+
+%   \begin{tabular}{l@{\hskip -3cm}lrrrr}
+%     \toprule
+%     \multicolumn{2}{l}{}                               & \emph{DNSA}                & \emph{FOIA}                      & \emph{Govt.}          & \emph{RECAP}                                                   \\
+%     \midrule
+%     \multicolumn{2}{l}{Documents}                      & \dnsaNumDocs               & xxx  & \govtNumDocs          & \recapNumDocs                                                  \\
+%     \multicolumn{2}{l}{Pages}                          & \dnsaPg                    & xxx  & \govtPg               & \recapPg                                                       \\
+%     \multicolumn{2}{l}{Non-raster pages}               & \dnsaNonRastPg             & xxx  & \govtNonRastPg        & \recapNonRastPg                                                \\
+%     \multicolumn{2}{l}{Redacted docs}                  & \dnsaNumDocsWRedact        & xxx  & \govtNumDocsWRedact   & \recapNumDocsWRedact                                           \\
+%     \midrule
+%     \multicolumn{2}{l}{Redacted text objs.}            & \dnsaMetaRedact            & xxx  & \govtMetaRedact       & \recapMetaRedact                                               \\
+%                                                        & Unadjusted                 & xxx  & \unadjFOIA            & \unadjGOVT                            & \unadjRECAP            \\
+%                                                        & Adobe OCR                  & xxx  & \ocrFOIA              & \ocrGOVT                              & \ocrRECAP              \\
+%                                                        & Exact MS Word (>100 chars) & xxx  & \mswFOIAExact         & \mswGOVTExact                         & \mswRECAPExact         \\
+%                                                        & Exact MS Word (<5\% error) & xxx  & \mswFOIAExactFivePerc & \mswGOVTExactFivePerc                 & \mswRECAPExactFivePerc \\
+% %    \multicolumn{2}{l}{\ \ Exact 2012}                & \mswDNSAExactTwelve        & xxx  & \mswGOVTExactTwelve   & \mswRECAPExactTwelve                                           \\
+% %    \multicolumn{2}{l}{\ \ Exact 2021}                & \mswDNSAExactTwenty        & xxx  & \mswGOVTExactTwenty   & \mswRECAPExactTwenty                                           \\
+%                                                        & Near MS Word               & xxx  & \mswFOIANear          & \mswGOVTNear                          & \mswRECAPNear          \\
+% %    \multicolumn{2}{l}{\ \ Near 2012}                 & \mswDNSANearTwelve         & xxx  & \mswGOVTNearTwelve    & \mswRECAPNearTwelve                                            \\
+% %    \multicolumn{2}{l}{\ \ Near 2021}                 & \mswDNSANearTwenty         & xxx  & \mswGOVTNearTwenty    & \mswRECAPNearTwenty                                            \\
+%                                                        & Unrecognized adj.          & xxx  & \unrecFOIA            & \unrecGOVT                            & \unrecRECAP            \\
+% %    \multicolumn{2}{l}{\ \ Unknown font}              & \unrecDNSAUnkFont          & xxx  & \unrecGOVTUnkFont     & \unrecRECAPUnkFont                                             \\
+% %    \multicolumn{2}{l}{\ \ Known font}                & \unrecDNSAKnwFont          & xxx  & \unrecGOVTKnwFont     & \unrecRECAPKnwFont                                             \\
+%     \midrule
+%     uncor names\_all                                   &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 42/626 (6.7\%), 19/232 (8.2\%), 0/0   & 0/0, 0/0, 0/0          \\
+% uncor mr\_surnames                                     &                            & 1/1 (100.0\%), 0/0, 1/2 (50.0\%) & xxx & 19/296 (6.4\%), 11/122 (9.0\%), 0/0   & 0/0, 0/0, 0/0          \\
+% uncor mrs\_surnames                                    &                            & 0/0, 0/0, 0/0                    & xxx & 16/210 (7.6\%), 2/79 (2.5\%), 0/0     & 0/0, 0/0, 0/0          \\
+% uncor names\_all\_straight\_pos                        &                            & 1/1 (100.0\%), 0/0, 0/0          & xxx & 7/57 (12.3\%), 2/20 (10.0\%), 0/0     & 0/0, 0/0, 0/0          \\
+% uncor names\_all\_curly\_pos                           &                            & 0/0, 0/0, 0/0                    & xxx & 16/218 (7.3\%), 3/83 (3.6\%), 0/0     & 0/0, 0/0, 0/0          \\
+% uncor ameng                                            &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 47/604 (7.8\%), 19/227 (8.4\%), 0/0   & 0/0, 0/0, 0/0          \\
+% uncor countries                                        &                            & 0/0, 0/0, 1/1 (100.0\%)          & xxx & 81/128 (63.3\%), 33/50 (66.0\%), 0/0  & 0/0, 0/0, 0/0          \\
+% uncor demonyms                                         &                            & 0/0, 0/0, 2/2 (100.0\%)          & xxx & 69/98 (70.4\%), 25/30 (83.3\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor names\_all                                         &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 46/460 (10.0\%), 19/152 (12.5\%), 0/0 & 0/0, 0/0, 0/0          \\
+% cor mr\_surnames                                       &                            & 1/1 (100.0\%), 0/0, 1/2 (50.0\%) & xxx & 19/249 (7.6\%), 11/90 (12.2\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor mrs\_surnames                                      &                            & 0/0, 0/0, 0/0                    & xxx & 16/190 (8.4\%), 2/70 (2.9\%), 0/0     & 0/0, 0/0, 0/0          \\
+% cor names\_all\_straight\_pos                          &                            & 1/1 (100.0\%), 0/0, 0/0          & xxx & 7/57 (12.3\%), 2/20 (10.0\%), 0/0     & 0/0, 0/0, 0/0          \\
+% cor names\_all\_curly\_pos                             &                            & 0/0, 0/0, 0/0                    & xxx & 18/168 (10.7\%), 5/52 (9.6\%), 0/0    & 0/0, 0/0, 0/0          \\
+% cor names\_all,mr\_surnames                            &                            & 0/2 (0.0\%), 0/0, 0/2 (0.0\%)    & xxx & 48/554 (8.7\%), 22/188 (11.7\%), 0/0  & 0/0, 0/0, 0/0          \\
+% cor names\_all,mrs\_surnames                           &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 40/535 (7.5\%), 15/186 (8.1\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor names\_all,names\_all\_straight\_pos               &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 49/488 (10.0\%), 22/162 (13.6\%), 0/0 & 0/0, 0/0, 0/0          \\
+% cor names\_all,mr\_surnames,names\_all\_straight\_pos  &                            & 0/2 (0.0\%), 0/0, 0/2 (0.0\%)    & xxx & 51/579 (8.8\%), 24/197 (12.2\%), 0/0  & 0/0, 0/0, 0/0          \\
+% cor names\_all,mrs\_surnames,names\_all\_straight\_pos &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 43/557 (7.7\%), 17/194 (8.8\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor names\_all,names\_all\_curly\_pos                  &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 51/524 (9.7\%), 19/176 (10.8\%), 0/0  & 0/0, 0/0, 0/0          \\
+% cor names\_all,mr\_surnames,names\_all\_curly\_pos     &                            & 0/2 (0.0\%), 0/0, 0/2 (0.0\%)    & xxx & 49/603 (8.1\%), 22/210 (10.5\%), 0/0  & 0/0, 0/0, 0/0          \\
+% cor names\_all,mrs\_surnames,names\_all\_curly\_pos    &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 44/587 (7.5\%), 16/206 (7.8\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor ameng                                              &                            & 0/2 (0.0\%), 0/0, 1/2 (50.0\%)   & xxx & 52/450 (11.6\%), 18/154 (11.7\%), 0/0 & 0/0, 0/0, 0/0          \\
+% cor countries                                          &                            & 0/0, 0/0, 1/1 (100.0\%)          & xxx & 81/83 (97.6\%), 30/31 (96.8\%), 0/0   & 0/0, 0/0, 0/0          \\
+% cor demonyms                                           &                            & 0/0, 0/0, 2/2 (100.0\%)          & xxx & 76/79 (96.2\%), 25/25 (100.0\%), 0/0  & 0/0, 0/0, 0/0          \\
+% \midrule
+%     Correlated FN/LNs                                  &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     FNLN Cases                                         &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     Matched FNLNs                                      &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     \midrule
+%     Total Exact                                        &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     True Positive Exact                                &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     False Positive Exact                               &                            & \dnsaExactName                   & xxx & \govtExactName                        & \recapExactName        \\
+%     \bottomrule
+%   \end{tabular}

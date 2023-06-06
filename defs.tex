@@ -1,0 +1,292 @@
+
+
+\renewcommand{\qedsymbol}{\rule{7pt}{7pt}}
+\newcommand\maxray{Edact-Ray}
+
+% The following macros give the pretty names of texts dictionaries and fonts.
+
+\newcommand\wkpname{Wikipedia}
+\newcommand\lawname{Legal}
+\newcommand\nytname{News}
+
+\newcommand\strname{Str}
+\newcommand\acrnname{Acrn}
+\newcommand\pronname{Pron}
+\newcommand\wordname{Word}
+\newcommand\fnname{FN}
+\newcommand\lnname{LN}
+\newcommand\filnname{FILN}
+\newcommand\fixlnname{FI$\times$LN}
+\newcommand\fnlnname{FNLN}
+\newcommand\fnxlnname{FN$\times$LN}
+\newcommand\ctryname{Ctry}
+\newcommand\rgnname{Rgn}
+\newcommand\natlname{Natl}
+
+\newcommand\tfontname{Times}
+\newcommand\afontname{Arial}
+\newcommand\bfontname{Calibri}
+\newcommand\rfontname{Courier}
+
+\newcommand\nadjname{Unadjusted}
+\newcommand\wxiiname{Word 2007}
+\newcommand\wxxiname{Word 2021}
+
+\newcommand\nadjshortname{Un}
+\newcommand\wxiishortname{W07}
+\newcommand\wxxishortname{W19}
+
+\newcommand\uniname{Uniformly distributed}
+\newcommand\empname{Text frequency distr.}
+
+\newcommand\msWordPrefixMatch{XXX}
+
+% wild section results
+\newcommand\numWildCorpora{4}
+\newcommand\numWildDNSALocSample{400}
+\newcommand\numWildFOIALocSample{100}
+\newcommand\numWildGovtLocSample{400}
+\newcommand\numWildRECAPLocSample{100}
+\newcommand\numWildLocSample{1,000}
+
+\newcommand\dnsaNumDocs{678}
+\newcommand\foiaNumDocs{1,580}
+\newcommand\govtNumDocs{3,145}
+\newcommand\recapNumDocs{\num{2.5e4}}
+\newcommand\oigNumDocs{\num{1.9e4}}
+% \newcommand\oigNumDocs{18,975}
+
+% \newcommand\recapNumDocs{24,835}
+
+\newcommand\dnsaPg{\num{1.2e4}}
+% \newcommand\dnsaPg{12,498}
+\newcommand\foiaPg{\num{4.9e5}}
+% \newcommand\foiaPg{491,782}
+\newcommand\oigPg{\num{5.2e5}}
+% \newcommand\oigPg{515,870}
+% \newcommand\govtPg{491,782}
+\newcommand\recapPg{\num{3.4e5}}
+% \newcommand\recapPg{336,973}
+
+\newcommand\dnsaNonRastPg{8,628}
+\newcommand\foiaNonRastPg{12,012}
+\newcommand\govtNonRastPg{259,939}
+\newcommand\recapNonRastPg{269,546}
+
+% select corpus_name, count(distinct document_name) from redactions join pages
+% on redactions.page = pages.hash group by corpus_name;
+\newcommand\dnsaNumDocsWRedact{7}
+\newcommand\foiaNumDocsWRedact{296}
+\newcommand\govtNumDocsWRedact{230}
+\newcommand\recapNumDocsWRedact{67}
+\newcommand\totNumDocsWRedact{600}
+
+\newcommand\totNumPagesWRedact{11,997}
+
+% 112,149,773
+\newcommand\numRECAPpages{$\approx10^{8}$}
+
+\newcommand\avgShortlist{801}
+\newcommand\avgNumNames{238}
+\newcommand\avgStdDevRECAPName{1.3}
+
+\newcommand\totalNonSynthNames{778}
+\newcommand\numNonSynthRedactions{5,282}
+
+\newcommand\numWildAttacked{769}
+
+% select corpus_name, count(distinct redactions.id) from redactions 
+% join pages on redactions.page = pages.hash group by corpus_name;
+\newcommand\dnsaMetaRedact{235}
+\newcommand\foiaMetaRedact{\num{4.5e4}}
+\newcommand\oigMetaRedact{\num{1.3e4}}
+% \newcommand\foiaMetaRedact{45,219}
+% \newcommand\oigMetaRedact{13,214}
+\newcommand\govtMetaRedact{51,651}
+\newcommand\recapMetaRedact{1,221}
+\newcommand\totMetaRedact{80,301}
+
+\newcommand\unadjDNSA{7}
+\newcommand\unadjFOIA{422}
+\newcommand\unadjGOVT{2,589}
+\newcommand\unadjRECAP{7}
+
+\newcommand\ocrDNSA{0}
+\newcommand\ocrFOIA{16,678}
+\newcommand\ocrGOVT{3,939}
+\newcommand\ocrRECAP{224}
+
+\newcommand\mswDNSAExact{14}
+\newcommand\mswFOIAExact{3}
+\newcommand\mswGOVTExact{4,712}
+\newcommand\mswRECAPExact{119}
+\newcommand\mswDNSAExactFivePerc{7}
+\newcommand\mswFOIAExactFivePerc{1}
+\newcommand\mswGOVTExactFivePerc{1,428}
+\newcommand\mswRECAPExactFivePerc{0}
+
+\newcommand\mswDNSAExactTwelve{14}
+\newcommand\mswDNSAExactTwenty{7}
+\newcommand\mswFOIAExactTwelve{3}
+\newcommand\mswFOIAExactTwenty{0}
+\newcommand\mswGOVTExactTwelve{4,425}
+\newcommand\mswGOVTExactTwenty{967}
+\newcommand\mswRECAPExactTwelve{112}
+\newcommand\mswRECAPExactTwenty{53}
+
+\newcommand\mswDNSANear{3}
+\newcommand\mswFOIANear{2}
+\newcommand\mswGOVTNear{177}
+\newcommand\mswRECAPNear{33}
+\newcommand\mswDNSANearTwelve{0}
+\newcommand\mswDNSANearTwenty{3}
+\newcommand\mswFOIANearTwelve{1}
+\newcommand\mswFOIANearTwenty{2}
+\newcommand\mswGOVTNearTwelve{132}
+\newcommand\mswGOVTNearTwenty{49}
+\newcommand\mswRECAPNearTwelve{33}
+\newcommand\mswRECAPNearTwenty{0}
+
+\newcommand\unrecDNSA{214}
+\newcommand\unrecDNSAUnkFont{32}
+\newcommand\unrecDNSAKnwFont{182}
+\newcommand\unrecFOIA{\num{1.3e4}}
+% \newcommand\unrecFOIA{13,214}
+\newcommand\unrecFOIAUnkFont{982}
+\newcommand\unrecFOIAKnwFont{9,108}
+\newcommand\unrecGOVT{40,270}
+\newcommand\unrecGOVTUnkFont{6,468}
+\newcommand\unrecGOVTKnwFont{33,802}
+\newcommand\unrecRECAP{838}
+\newcommand\unrecRECAPUnkFont{183}
+\newcommand\unrecRECAPKnwFont{655}
+\newcommand\unrecOIG{\num{1e4}}
+% \newcommand\unrecOIG{10,517}
+
+\newcommand\numWildTotalVuln{4,848}
+
+\newcommand\nameDictSize{235,560}
+
+\newcommand\numOIGUnmatched{39}
+
+\newcommand\numRECAPPDFs{11,181,433}
+\newcommand\numRECAPredactions{195,436}
+\newcommand\numRECAPNameredactions{6,541}
+\newcommand\numRECAPredactionDocs{710}
+
+\newcommand\numRECAPnadj{327}
+\newcommand\numRECAPnadjSample{100}
+\newcommand\numRECAPocr{445}
+\newcommand\numRECAPmsw{58}
+\newcommand\numRECAPunk{5,691}
+\newcommand\numRECAPNearMSW{20}
+
+\newcommand\numRECAPtrivialRedaction{\num{1.9e5}}
+%\newcommand\numRECAPtrivialRedaction{193,714}
+
+\newcommand\nameDictSizeComb{7,066,800}
+
+% ---
+% Wild Results
+% ---
+\newcommand\dnsaExactName{XXX}
+\newcommand\dnsaExactMrName{XXX}
+\newcommand\dnsaExactMrsName{XXX}
+\newcommand\dnsaExactFiLn{XXX}
+
+\newcommand\foiaExactName{XXX}
+\newcommand\foiaExactMrName{XXX}
+\newcommand\foiaExactMrsName{XXX}
+\newcommand\foiaExactFiLn{XXX}
+
+\newcommand\govtExactName{XXX}
+\newcommand\govtExactMrName{XXX}
+\newcommand\govtExactMrsName{XXX}
+\newcommand\govtExactFiLn{XXX}
+
+\newcommand\recapExactName{XXX}
+\newcommand\recapExactMrName{XXX}
+\newcommand\recapExactMrsName{XXX}
+\newcommand\recapExactFiLn{XXX}
+
+\newcommand\hybridNadjAvgMatches{5,861}
+\newcommand\hybridNadjMinMatches{10}
+
+\newcommand\numFOIANamesAttacked{711}
+\newcommand\numOIGNamesAttacked{58}
+
+\newcommand\numFOIAUnmatched{382}
+\newcommand\numFOIAUniq{3}
+\newcommand\numOIGUniq{0}
+\newcommand\numFOIAavg{2,435}
+\newcommand\numFOIAmed{494}
+\newcommand\numOIGavg{4,260}
+\newcommand\numOIGmed{1,081}
+
+\newcommand\foiaNameMaxRank{125,282}
+
+\newcommand\avgMatchesWildTwo{561.09}
+\newcommand\ratioNamesToMatches{420}
+\newcommand\ratioWidthClassesToWidths{1095}
+
+% ---
+% Epstein Case Study
+% ---
+
+\newcommand\numEpsteinPagesRedacted{15}
+\newcommand\numEpsteinDocuments{23}
+\newcommand\numEpsteinRedactions{62}
+\newcommand\numEpsteinVulnRedactions{4}
+
+
+% The following macros give the dictionary sizes and uniform entropies. The names have
+% the form
+% 
+%     \neltDDD  and  \hxDDD
+% 
+% where DDD is the dictionary, one of str, acrn, pron, word, fn, ln, filn, fnln, ctry, rgn, or natl
+
+
+\input{defs0} % python tools/mkdefs0.py
+% Overrides for prettier formatting. Always compare to actual numbers in defs0.tex.
+
+\renewcommand\neltacrn{\num{1.2e7}}
+\renewcommand\neltstr{\num{9e22}}
+\renewcommand\neltfiln{\num{3.9e6}}
+\renewcommand\neltfnln{\num{1.5e10}}
+\renewcommand\neltrgn{\num{2.8e6}}
+\newcommand\nelttsfnln{\num{1.8e6}}
+
+% The following macros are for the word counts for each dictionary with respect to given
+% text and the entropy of the dictionary distribution w.r.t. to a text. The names have
+% the form
+% 
+%     \noccTTTDDD  and  \hxTTTDDD
+% 
+% where:
+% 
+% TTT is the text, one of wkp (Wikipedia), law (Legal), or nyt (News)
+% DDD is the dictionary, one of str, acrn, pron, word, fn, ln, filn, fnln, ctry, rgn, or natl
+
+\input{defs1} % python tools/mkdefs1.py
+
+% The following macros are the results of the simulated redaction and guessing experiment. The
+% names have the form
+% 
+%     \SSSMMMTTTDDDWWWFZ
+% 
+% where:
+% 
+% SSS is the statistic, one of hyu, hyw, hxyu, hxyw, puu, puw, pgu, pgw
+% MMM is the static modifier, omitted or one of min, max, or avg
+% TTT is the text, one of any (Any, unadj only), wkp (Wikipedia), law (Legal), or nyt (News)
+% DDD is the dictionary, one of str, acrn, pron, word, fn, ln, filn, fnln, ctry, rgn, or natl
+% WWW is the workflow, one of nadj (Unajusted), wxii (Word 2012), or wxxi (Word 2021)
+% F is the font, one of t (Times), b (Calibri), a (Arial), or r (Courier)
+% Z is the font size, one of ix (9 pt), x (10 pt), xi (11 pt), or xii (12 pt)
+% 
+% For example, \hyuavgnytfnnadjrxii is the average document residual entropy H(Y) for redactions
+% on the News (NYT) corpus with first name dictionary, unadjusted text in 12 pt Courier.
+
+\input{defs2} % python tools/mkdefs2.py
+\input{defs3} % python tools/mkdefs3.py -t nyt blast
