@@ -1,0 +1,66 @@
+% Adapted from http://www.texample.net/tikz/examples/flexible-flow-chart/
+\newcounter{step}
+\newcommand*\step{
+  \stepcounter{step}%
+  \scriptsize
+  \arabic{step}.
+  \ttfamily
+}
+\begin{tikzpicture}[
+  % Global options.
+  >=Stealth,
+  node distance=2.5ex,
+  every join/.style={norm},
+  every label/.style={font=\scriptsize},
+  % Flow chart box styles.
+  base/.style={font=\step, draw, on chain, on grid, align=center, minimum height=2ex, inner xsep=.1em, top color=black!10},
+  proc/.style={base, rectangle, minimum width=4em},
+  test/.style={base, diamond, aspect=2, minimum width=4em},
+  % Connector styles.
+  norm/.style={shorten >=1pt, ->, font=\scriptsize, pos=.3333},
+  % Outline styles.
+  outline/.style={draw, rectangle, densely dotted, rounded corners, inner sep=1ex},
+]
+% CFG for main.
+{[start chain=main going below]
+  \node[proc]                {call foo};
+  \node[proc, join=by {"2"}] {call bar};
+  \node[proc, join=by {"3"}] {call foo};
+  \node[proc, join=by {"2"}] {ret};
+}
+\node[outline, fit=(main-begin) (main-end), label={\texttt{main} ($\mathit{length}=7$)}] {};
+
+% CFG for foo.
+{[start chain=foo going below]
+  \node[proc, right=3 of main-begin] {mem[0x100] = 1};
+  \node[proc, join=by {"1"}]       {eax = 2};
+  \node[proc, join=by {"1"}]       {ret};
+}
+\node[outline, fit=(foo-begin) (foo-end), label={\texttt{foo} ($\mathit{length}=2$)}] {};
+
+% CFG for bar.
+{[start chain=bar going below]
+  \node[proc, right=3.5 of foo-begin] {ebx = mem[0x200]};
+  \node[test, join=by {"1"}]      {ebx == 1};
+  {[start branch=then]}
+  \node[proc, join=by {"\texttt{false}; 1"}] (cond) {eax = 3};
+  {[continue branch=then]
+    \node[proc, right=1.75 of cond,
+          join=by {rounded corners,
+                   to path={-|(\tikztotarget) \tikztonodes},
+                   pos=.25,
+                   "\texttt{true}; 1"}] {eax = 2};
+  }
+  \node[on chain] (dummy) {};
+  \node[proc,
+        join=with cond by {"1"},
+        join=with bar/then-end by {
+          -,
+          rounded corners,
+          to path={|- (dummy) \tikztonodes -| (\tikztotarget)},
+          "1"}] {ret};
+}
+\node[outline, fit=(bar-begin) (bar/then-end) (bar-end), label={\texttt{bar} ($\mathit{length}=3$)}] {};
+\end{tikzpicture}
+
+% vim: set sw=2 sts=2 ts=8 et tw=0:
