@@ -10,7 +10,7 @@ Every one of these discussed formalisms is well-known and each has several syste
 This dissertation may be the first to organize these approaches as forms of emulation---detailed literature reviews are included alongside Chapters~\ref{chap:rehost},\ \ref{chap:info}, and~\ref{chap:integreat}.
 
 In this chapter, we will introduce four different forms of emulation used in the analysis of complex systems.
-For each form, we will identify contemporary system that implement the approach, define its nature and limitations, and provide examples.
+For each form, we will identify contemporary systems that implement the approach, define its nature and limitations, and provide examples.
 
 \section{Peripheral Emulators and Instruction Set Simulators}
 \label{sec:hardemu}
@@ -47,7 +47,7 @@ For these elements, the simulator must either ignore these semantics or emulate 
 These helper routines and the translation rules for the simulator form an intermediate representation of the target's microarchtectural semantics.
 The simulator may then be reused and leveraged to emulate a number of systems that are based on the represented ISA without necessitating ownership of a chip implementing the ISA.
 
-\paragraph{An Example: QEMU}
+\begin{example}[QEMU]
 
 QEMU is a general purpose emulator that supports a wide variety of ISAs and hardware peripherals~\cite{bellard2005qemu}.
 QEMU is both a full system emulator, meaning that it is capable of emulating the behavior of an entire system, including peripherals, and capable of emulating the behavior of a processor in a virtual machine, which allows it to leverage the virtual machine extensions of the host system to accelerate the emulation of the target processor.
@@ -76,6 +76,8 @@ Due to the complexity of certain microarchitectural semantics, QEMU also contain
 These helper functions are triggered by failures in the translation process, and because not all of them are supported or correct, QEMU serves to emulate targets rather than reproduce them.
 
 Note that the emulation process itself is composed of a larger execution loop, which is responsible for fetching instructions, translating them to TCG instructions, executing them, and modeling the behavior of hardware peripherals and interactions between multiple processors with respect to a given ISA's interfaces.
+
+\end{example}
 
 \paragraph{Hardware Peripherals}
 \label{sec:periphs}
@@ -132,20 +134,267 @@ These frameworks can provide performance benchmarking infromation but also signi
 Passive instrumentation may also use the emulator as a black box and incorporating it into a larger system such as an enviromental simulator, to evaluate the dynamics of the larger system.
 
 \section{Dynamic Analysis}
+\label{sec:dynanal}
 
+Instrumentation is one method of \emph{dynamic analysis}, which analyzes the behavior of a system or emulation during execution.
+To be concrete, the system must be running for it to be considered dynamic, and the analysis must be performed during execution, and the forms used for this dissertation include live binary rewriting, fuzzing, the use of debugger, and passive monitoring.
 
-\subsection{Binary Rewriting}
+\paragraph{Live Binary Rewriting} Sometimes it is possible to add self-modifying instructions to a binary in order to change its behavior as it executes.
+For a given system, different forms of rewriting and instrumentation are possible, and most include the use of \emph{shim} code injected between the operations of other code for instrumenting the state of the system.
+The shim itself can be implemented in a variety of ways, such as by using a \emph{trampoline} which maintains the setup and teardown of the shim's state during instrumentation.
 
-\subsection{Fuzzing}
+As a common example, the length of a call instruction on i386 (x86) is a 5-byte instruction, consisting of one byte for the opcode and four bytes for the address of the function to call.
+As long as the four byte offset is sufficiently small, the actual call target location information only requires the middle three bytes of the instruction.
+In these cases, these three bytes can be shifted over by one, and the call instruction may be modified to a 2-byte interrupt instruction, which transfers control to an interrupt based trampoline for the performance of instrumentation and, reads the remaining three bytes to determine the correct return address, and then self-modifies the shim to replicate the control transfer using the three byte offset (Fig~\ref{fig:livebinaryrewriting}).
+This same technique was used to develop exploits for the CMU-900 in Chapter~\ref{chap:rehost}.
 
-\subsection{Debuggers}
+% tikz figure depicting the above instrumentation (instruction rewriting) technique
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=0.5cm]
+	% two halves, one labeled "before instrumentation" and the other "after instrumentation"
+	% the left will have "\texttt{call \_func} [0xE8, 0x12, 0x34, 0xFF, 0xFF]", with the last 0xFF highlighted in red and labeled "unneeded". On the right we have "\texttt{int 0x3} [0xCD, 0x03, 0x12, 0x34, 0xFF]"
+	\node[draw, minimum width=4cm, text width=8cm, align=center] (before) {\texttt{call \_func:		0xE8, \textcolor{blue}{0x12, 0x34, 0xFF,} \textcolor{red}{0xFF}}};
+	\node[draw, minimum width=4cm, text width=8cm, align=center, below=1cm of before] (after) {\texttt{int 0x3:		0xCD, 0x03, \textcolor{blue}{0x12, 0x34, 0xFF}}};
+	% arrow with a label "shim injection" between the two halves
+	\draw[->, very thick] (before) -- node[right] {Shim Injection} (after);
+\end{tikzpicture}
+\caption{Example of binary rewriting.}
+\label{fig:livebinaryrewriting}
+\end{figure}
 
-\section{Functional and High Level Emulators}
+\paragraph{Fuzzing} Fuzzing is a technique for generating inputs to a system in order to explore its behavior.
+In general, fuzzing must be performed on an emulation rather than the system itself, as it is necessary to reset a correct initial state for fuzzing, and many crashes or unexplored behaviors may damage the real system.
+For the discovery of bugs, fuzzing is effectively an intelligent dictionary attack which must infer the right inputs to test from a large number (potentially exponential) of possible inputs.
+Effective fuzzing also requires careful definitions of \emph{exit conditions}, which indicate when a given input has not found any interesting path, as exploring paths which ``hang'' decreases overall analysis performance.
+The most common fuzzers in use today are variations of American Fuzzy Lop (AFL)~\cite{zalewski2017technical}, which provides a general framework and API for building more advanced fuzzers attached to emulators.
 
-\subsection{Function Extraction and Summarization}
+\paragraph{Debugging} Debuggers are a common tool for analyzing the behavior of a system, and are often used in conjunction with other techniques.
+Similar to a shim, debuggers work by halting the execution of a system at a given point, allowing the user to inspect or modify the system's state, and then resuming execution.
+These inspection routines may also be automated, and can be used to collect information about the system's state during execution, similar to instrumentation.
+For this purpose, many emulators, like QEMU, include a debugging (gdb) server which allows the analyst to connect to the emulator and inspect the system using common mechanisms, e.g. reading memory values.
 
-\subsection{Environmental Modeling}
+\section{High Level Emulators}
+\label{sec:highlevel}
 
-\section{Symbolic Executors}
+While the above techniques are often necessary for the analysis of opaque embedded systems with symbol-stripped firmware, in many cases binaries also originate from standard consumer hardware.
+For these binaries \emph{functional} or \emph{high level} emulation (HLE) is appropriate---emulation that does not require the rehosting of system components, and directly operates on program representations.
+Standard executables like Microsoft Word are distributed as a binary in a common format with some symbols intact, and emulation can run on standard laptop hardware as the system does not need significant rehosting.
+These binaries can be instrumented, translated, or analyzed using a number of tools, including symbolic reasoning frameworks and standard tools from formal methods.
+However, these emulators can also be generated using \emph{function extraction}, \emph{summarization}, and \emph{decompilation} of embedded system binaries.
 
-\subsection{Taint Tracking and Data Flow Analysis}
+A HLE can make the model of the system more effective and useful while sacrificing authenticity.
+These emulators abstract the lower level components or software of the system either by assuming they are already present on the host or by ignoring them altogether.
+One benefit of this approach is that it can more easily address high-level correctness concerns, such as the reachability of certain system states, as it does not require a thorough analysis of the system's subcomponents and semantics.
+This approach is also independent of detailed hardware specifications but is less flexible, as the high-level emulator defines a limited API for the analysis of the system under consideration.
+Moreover, a given high-level emulator will be standardized to a particular interpretive domain, e.g. a dynamical or hybrid system interpretation, and does not simulate the behavior of the system under study, which may be possible to model using mathematics but is only exactly specified by the system's implementation in itself.
+
+As more complex, widely used systems and software become prevalent, HLEs become critical.
+Supporting the semantics of each detail for a complex system is often infeasible or simply wasteful, as the features are already present on the host for the emulation or not necessary for the analyst's goals.
+Low-level emulations are also becoming easier to generate as systems move to single, well-understood architectures like ARM.
+
+\paragraph{Function Extraction}
+HLEs often involve some method of \emph{function extraction} for a given component from a complex system, which allows a portion of the system to be emulated in isolation from other components.
+Extraction can involve a range of techniques, including program slicing, abstract interpretation, lifting and \emph{summarization}.
+A summarization of a function $f$ is given by the following definition~\cite{interpolation}:
+
+\begin{definition}[Function Summarization]
+\label{def:summarization}
+Let $f$ be a function, $v$ a bound on the number of unrolled loops and recursive calls, $R_{v}^{f}$ a set of tuples of computations in $f$ over $v$, $\mathbb{D}$ a domain function mapping from inputs to outputs of $f$, then $S$ s.t. $R_{v}^{f} \subseteq S \subseteq \mathbb{D}$ is a summary of $f$.
+\end{definition}
+
+This definition in itself is limiting as it only considers a strict subset of the map from the inputs to the outputs of the computation $f$, and does not consider the relations that exist between tuples in $R_{v}^{f}$.
+Thus it becomes appropriate to consider a more general definition of \emph{logical translation}, which uses propositions to extract system components.
+
+\begin{definition}[Logical Translation]
+\label{def:nested-summarization}
+	Let $f$ and $f'$ be functions, $P = p_{1}, p_{2}, \dots $ possible
+	execution paths through $f$, $\Phi = \phi_{1} . \phi_{2} . \dots
+	\phi_{n}$ a set of statements in natural deduction for resolving the
+	relationships between symbols in one computational domain function,
+	$\mathbb{D}$, mapping from inputs to outputs of $f$, to another domain
+	function, $\mathbb{D}'$, mapping from inputs to outputs of $f'$,
+	$A_{\Phi(P)}^{f}$ a set of tuples of computations resulting from the
+	application of $\Phi$ to $f$ over $P$, then $S$ s.t. $A_{\Phi(P)}^{f}
+	\subseteq S \subseteq \mathbb{D}'$ is a logical translation of
+	$p$.
+\end{definition}
+
+This is formalized via natural deduction, but often the specific translation process is not fully proven for real-world systems and instead adopts \emph{heurisitics} or short-cuts which are assumed to be correct in most cases.
+An example application of logical translation in this dissertation is the extraction of glyph positioning schemes from PDF document creation software by deducing the C representation of important computations from data-flow analysis (dynamic instrumentation) of machine code operations.
+
+Regardless of the method used, the resulting extracted function may be used as an emulator to verify and understand the behavior of the system, but may be missing non-extracted interfaces.
+There are several methods of addressing this, such as replacing these intefaces with logical summaries, as in the HiFrog~\cite{hifrog} and later UpProver~\cite{upprover} systems, or through the use of fuzzing.
+Not extracting hardware peripheral semantics also makes firmware rehosting systems like P\textsuperscript{2}IM~\cite{p2im2020} implicit forms of function extraction of software from a hardware-software system, as evidenced by recent work on incomplete information in firmware specifications~\cite{zhou2022your}.
+
+\paragraph{Environmental Modeling and Communication Channels}
+
+Emulation can extend to the modeling of the \emph{environment} of a system, and oftentimes the extracted function of a single component may not be sufficient to understand the overall real-world behavior or security of a system.
+Similar to peripheral modeling, some information about the system's environment may not even be available without additional external analysis.
+Non-computational environmental modeling is constrained to three forms of specification, captured by common toolkits like Matlab Simulink, used in this dissertation: equations, random variables, and logic.
+Models of computation and stateful systems in the environment are also possible and captured by the subdomain of \emph{hybrid systems} which unify discrete and continuous state transitions~\cite{henzinger1996theory}.
+
+% screenshots of matlab, example of simulink model
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{envir-model.pdf}
+\caption{Environmental model emulation inputs and outputs for a chemical plant communicating to a physical Programmable Logic Controller (the blue block) in Simulink.}
+\label{fig:envir-model}
+\end{figure}
+
+Figure~\ref{fig:envir-model} depicts part of the environmental model for a Tenessee Eastman chemical plant used in this dissertation.
+Regardless of the interconnections and components present in a given model, it is noteable that the emulation of a given subcomponent is entirely determined on what the environmental model can \emph{communicate} to the subcomponent.
+This concept generalizes across emulation and information theory, captured in by the concept of a \emph{channel}, which consists of an \emph{information source}, \emph{transmitter}, \emph{noise source}, \emph{receiver}, and \emph{destination}~\cite{shannon1948mathematical}:
+
+% tikz drawing of shannon's communication system
+\begin{center}
+\begin{tikzpicture}
+% wrap the text for information source onto two lines
+	\node[draw,minimum width=1cm,minimum height=1cm] (source) at (0,0) {};
+	\node[draw,minimum width=1cm,minimum height=1cm] (transmitter) at (3,0) {};
+\node[draw,minimum width=0.5cm,minimum height=0.5cm] (noise) at (6,0) {};
+	\node[draw,minimum width=1cm,minimum height=1cm] (noisesource) at (6,-2) {};
+	\node[draw,minimum width=1cm,minimum height=1cm] (receiver) at (9,0) {};
+	\node[draw,minimum width=1cm,minimum height=1cm] (destination) at (12,0) {};
+
+% add labels
+\node[above, text width=2cm, align=center] at (source.north) {Information Source};
+\node[above] at (transmitter.north) {Transmitter};
+\node[below] at (noisesource.south) {Noise Source};
+\node[above] at (receiver.north) {Receiver};
+\node[above] at (destination.north) {Destination};
+
+% message arrow
+\draw[->, very thick] (source) -- (transmitter) node[midway,below, align=center] {Message};
+% signal arrow
+\draw[->, very thick] (transmitter) -- (noise) node[midway,below, align=center] {Signal};
+% received signal arrow
+\draw[->, very thick] (noise) -- (receiver) node[midway,below, text width=2cm, align=center] {Received Signal};
+% message arrow
+\draw[->, very thick] (receiver) -- (destination) node[midway,below, align=center] {Message};
+\draw[->, very thick] (noisesource) -- (noise) node[midway,right, align=center] {};
+\end{tikzpicture}
+\end{center}
+
+\noindent
+Noise constitutes any distortion of the signal (e.g. loss of information).
+The \emph{channel capacity} is the maximum amount of information that can be sent through the channel, and is given by the following equation:
+
+\begin{equation}
+C = \max_{p(x)} I(X;Y)
+\end{equation}
+
+\noindent
+where $p(x)$ is the probability of a given input $x$ to the channel, and $I(X;Y)$ is the \emph{mutual information} between the input $X$ and the output $Y$ of the channel.
+Mutual information is defined as:
+
+\begin{equation}
+I(X;Y) = \sum_{y \in Y} \sum_{x \in X} p(x,y) \log \frac{p(x,y)}{p(x)p(y)}
+\end{equation}
+
+\noindent
+where $p(x,y)$ is the joint probability of $x$ and $y$ occurring, and $p(x)$ and $p(y)$ are the marginal probabilities of $x$ and $y$ occurring.
+A channel is considered to be \emph{lossless} if the mutual information between the input and output is equal to the entropy of the input, and \emph{lossy} otherwise.
+We relate this measure of mutual information to the capacity for an emulation to determine unknown qualities of a system in Chapter~\ref{chap:info}.
+Shannon's information channel is often also generalized into an \emph{information flow} which moves between different privilege domains and quantifies security~\cite{sabelfeld2003language, lowe2002quantifying}.
+
+\section{Encoding, Decoding, and Modeling}
+
+The formalization of \emph{codes}, systems of rules for the conversion of information, can unify many challenges presented by hardware emulators of Section~\ref{sec:hardemu}, dynamic analysis of Section~\ref{sec:dynanal}, and high level emulation of Section~\ref{sec:highlevel}.
+Traditional coding theory is concerned with the design of codes that can be used for the reliable and efficient transmission of information across a noisy channel~\cite{van1971coding, richardson2008modern, bierbrauer2016introduction}.
+Standard analyses of codes involve the removal of redundancies and detection of errors and a study of communication channels.
+One can also understand emulation as a decoding of a communicated information about the system and an encoding of the system's behavior.
+Thus, the efficacy of an emulation is determined by its ability to decode the original system and its ability to encode relevant information, typically thought of as a minimum description length (MDL) or Kolmogorov Complexity.
+
+\begin{definition}[Minimum Description Length]
+The length C(s) of the shortest binary string $s$ that is delimited by special marks and that can compute x on the Univeral Turing Machine and then halt.
+\end{definition}
+
+\noindent
+This definition has several limitations:
+\begin{enumerate}
+	\item It is not computable~\cite{cover1999elements}. Informally, to determine an
+		MDL we must execute every program and collect all that stop and
+		compute x, choosing the one that has the smallest size.
+		However, from the halting problem, we cannot decide if a
+		program stops or not. 
+	\item There are many programs that compute x and halt, and emulation is
+		not strictly concerned with the computation of an
+		\emph{optimal} encoding, but an effective encoding in a
+		high-dimensional space.
+	\item The definition does not provide insight into noise present in the
+		channel, and information loss is common in the analysis of real-world
+		systems. Equivalently, it does not provide insight into the encoding protocol
+		of the information and representation of the system (assumptions made regarding
+		the optimal description).
+\end{enumerate}
+
+MDL presents an important insight into the \emph{relative} complexity of system encodings through the measure $C(s)$ which, when generalized, can determine which of two emulated representations is more optimal.
+This is typically evaluated using the results of the dynamic analyses presented in Section~\ref{sec:dynanal}.
+There also exist standard encoding methods for system descriptions, encapsulated in prevalent techniques.
+
+\emph{Taint tracking} is one such standard method of system description, used to encode the flow of information.
+For every bit of information in a system, a bit of taint is associated with it, and set to 1 if the information is tainted, and 0 otherwise.
+Then, for every operation in the system, the taint of the output is determined by the taint of the inputs and the operation.
+If input bits are tainted and these bits decide some bits output, then these output bits will tainted.
+The resulting output bits encode how certain bits of information are used throughout the system.
+
+Standard encodings such as taint and associated emulators can be used for a variety of purposes.
+In Chapter~\ref{chap:rehost}, we will use taint tracking to bootstrap the operation of a symbolic execution engine within an instruction set simulator.
+For general function extraction, a standard encoding is an \emph{execution trace}, which can be recorded and then ``replayed'' to emulate the behavior of a system with the possibility of \emph{time-travel debugging}, a form of source-to-sink information-flow analysis capable of extracting the specific operations used to derive a variable.\footnote{
+	We scripted the Windows debugger time-travel debugging feature~\cite{timetravel} in order to peform function extraction on the glyph positioning models for the purposes of breaking redactions in Chapter~\ref{chap:info}.}
+Execution traces are written by some \emph{interpretation} of the system given by the emulator, a transformation of information which provides that information with a concrete meaning in some context.
+
+A given trace will be incorrect if the emulator does not capture the semantics of the system which are captured by a ``correct interpretation'', e.g. execution on the target microarchitecture, in the trace's output encoding (Section~\ref{sec:hardemu}).
+Execution traces therefore define an ordering on emulations, where the more optimal emulation is the one which most closely captures the desired semantics of the ground-truth system in its output.
+
+\emph{Modeling} a system is the generation translation of the system's original encoding which is still executable either in the original context or in an emulator.
+Formally, a model of a system will preserve some property of the system, such as its behavior or its structure, to some degree of error $\epsilon$.
+Given appropriate assumptions on the intended semantics of the system hold, the \emph{correctness} of a model may be determined by a proof demonstrating the outputs of the model are within $\epsilon$ of the outputs of the original system.
+This problem is also refered to as the \emph{completeness} of an interpretation~\cite{campion2022partial}.
+
+\begin{algorithm}
+\caption{Backpropagation}
+\label{alg:backprop}
+\begin{algorithmic}[1]
+\Procedure{Backprop}{$\mathbf{X}, \mathbf{Y}, \mathbf{W}$}
+\For {$l \gets L - 1$ to $1$} % add a comment that this is each layer
+\Comment{Each layer}
+	\For {$i \gets 1$ to $n$}
+\Comment{Each neuron}
+		\State $\delta_{i}^{l} \gets (\sum_{j \in L_{i}} w_{ij}^{l+1} \delta_{j}^{l+1}) * f'(z_{i}^{l})$
+	\EndFor
+\EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\input{ann-decomp.tex}
+
+\begin{example}[Artificial Neural Network]
+Consider a system with a subcomponent implementing a single backpropogation step of an artificaial neural network (ANN), provided in the high-level encoding of Algorithm~\ref{alg:backprop}.
+This standard model of the ANN could be ``executed'' by a human reader, but the form of encoding executed by a computer is the low-level encoding of the system, which is a sequence of instructions given in machine code or interpreted from a high-level representation.
+Fig.~\ref{fig:ann-decomp}. depicts one such high-level representation, the output of this routine \emph{decompiled} from machine code into a pseudo-C representation by Ghidra using several of the techniques mentioned in this Chapter.
+This code, which represents a subcomponent of a larger system, could alternatively be modeled by a symbolic executor, such as angr.
+Upon reaching a function like \_\_aeabi\_dadd, traditional symbolic execution will enter into the function, interpret it, and return a complex bitvector operation.
+
+To provide some notion of complexity, one software floating point multiply we studied, for example, had 153 lines of pseudo-C, 116 lines of decompiled assembly, and 15 branches, but a given emulator may interpret only a subset of these instructions.
+Extending this notion of emulation to the absolute limit, it is also possible to encode a system in such a manner that \emph{all} internal semantic detail is lost and only the input and output characteristics remain.
+
+We extracted one ARM software floating point value add taken from a real implementation of the above ANN code for a specific compiler and microarchtecture.
+This set of instructions had inputs split across four registers and outputs in two registers.
+	Represented as an uninterpreted function, preserving no semantics of the add operation itself, in a format that may be operated on by the Z3 theorem prover~\cite{zthree}\footnote{We split the representation into three assignments for simplicity.} results in the encoding provided in Fig.~\ref{fig:ann-spec}.
+The specific encoding of a system is therefore highly flexibile, justifying the need for empirical evidence and methods of evaluation when adopting strategies in these subject areas.
+
+\begin{figure}
+  \begin{lstlisting}
+tmp = z3.Function('f', [z3.FPSort(11,53)]*3)( z3.fpBVToFP( z3.Concat(r1, r0), z3.FPSort(11, 53)), z3.fpBVToFP( z3.Concat(r3, r2), z3.FPSort(11, 53)))
+r0 = z3.Extract(31, 0, z3.fpToIEEEBV(tmp))
+r1 = z3.Extract(63, 32, z3.fpToIEEEBV(tmp))
+  \end{lstlisting}
+	\caption{Example model of a ARM software floating point add as an uninterpreted function.}
+  \label{fig:ann-spec}
+\end{figure}
+
+\end{example}
+

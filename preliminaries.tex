@@ -19,7 +19,7 @@ In this definition the ordering operation on the sets is left undefined, and in 
 
 \subsection{Symbolic Execution}
 
-This specific form of abstract interpretation is called \emph{symbolic execution}, and is a method of program analysis that operates by tracking the values of variables in a program as symbolic expressions, rather than concrete values.
+The specific form of abstract interpretation from machine code to the theory of bitvectors is often referred to as \emph{symbolic execution}, and is a method of program analysis that operates by tracking the values of variables in a program as symbolic expressions, rather than concrete values.
 For example, in standard execution the statement $(x > 5) ?\ y + 1 : x + 1$ would be concretely evaluated to 4 if $x = 3$, however, a standard symbolic execution, the system will record the pair $(x<=5; x=x+1),(x>5;x=y+1)$ into a symbolic state, representing the two possible execution paths.
 
 Symbolic execution is a powerful tool for program analysis, but it is not without its limitations.

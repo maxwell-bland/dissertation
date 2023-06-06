@@ -1,0 +1,55 @@
+% configure listings for C
+\lstset{language=C}
+% configure style for ASE 2023
+\lstset{basicstyle=\ttfamily\scriptsize}
+\lstset{keywordstyle=\color{blue}\ttfamily\scriptsize}
+\lstset{commentstyle=\color{gray}\ttfamily\scriptsize}
+\lstset{stringstyle=\color{red}\ttfamily\scriptsize}
+\lstset{showstringspaces=false}
+\lstset{breaklines=true}
+\lstset{breakatwhitespace=true}
+\lstset{tabsize=2}
+\lstset{numbers=left}
+\lstset{numbersep=5pt}
+\lstset{numberstyle=\tiny\color{gray}}
+\lstset{frame=single}
+\lstset{rulecolor=\color{black}}
+\lstset{captionpos=b}
+\lstset{escapeinside={(*@}{@*)}}
+\lstset{morekeywords={if,else,return,for,while,do,switch,case,default,break}}
+
+\begin{figure}
+  \begin{lstlisting}
+  /* Code ommitted for space */
+  else {
+    /* Code ommitted for space */
+    do {
+      pdVar15 = pdVar7 + 1;
+      uVar22 = __aeabi_dmul(
+        *(undef4 *)pdVar7,
+        *(undef4 *)((int)pdVar7 + 4),
+        *(undef4 *)(pdVar17 + 1),
+        *(undef4 *)((int)pdVar17 + 0xc));
+      pdVar17 = pdVar17 + iVar14;
+      uVar21 = __aeabi_dadd(
+        (int)uVar21,
+        (int)((ulonglong)uVar21 >> 0x20),
+        (int)uVar22,
+        (int)((ulonglong)uVar22 >> 0x20));
+      pdVar7 = pdVar15;
+    } while (pdVar15 != pdVar11);
+  }
+  uVar10 = *(undef4 *)(local_78 + 1);
+  uVar13 = *(undef4 *)((int)local_78 + 0xc);
+  uVar22 = __aeabi_dsub(0,0x3ff00000,uVar10,uVar13);
+  uVar22 = __aeabi_dmul(
+    (int)uVar22, (int)((ulonglong)uVar22 >> 0x20),
+    uVar10, uVar13);
+  dVar23 = (double)__aeabi_dmul(
+    (int)uVar22, (int)((ulonglong)uVar22 >> 0x20),
+    (int)uVar21, (int)((ulonglong)uVar21 >> 0x20));
+  /* Code ommitted for space */
+\end{lstlisting}
+	\caption{Ghidra decompiled code for the sum operation of Algorithm~\ref{alg:backprop}.}
+	\label{fig:ann-decomp}
+\end{figure}
