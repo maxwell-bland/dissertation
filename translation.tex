@@ -1,21 +1,277 @@
 \chapter{Logic-based Function Extraction}
 \label{chap:integreat}
 
-More fundamental to an emulation is the representation used to detail the system under analysis.
-In this section, we will discuss progress made on the subject of lifting one representation, closed-source binary codes, to another which is more human-comprehensible.
-The novel contribution of this section will be the application of a restricted form of logic-based programming to the problem of binary lifting.
-In particular, we introduce a system, InteGreat, which is capable of expressing lifting rules over the theory of bitvectors using the syntax provided by Z3, which includes support for many of the standard operations used for reasoning about computations, such as fixed-point operators for reasoning about the invariants of expressions in loops.
+In the approaches to emulation-based measurements of system security we have considered thus far, the primary limitation has been the representation of missing information.
+In real-world systems, components are often only partially accessible due to a mixture of closed-source code, limited physical accessibility, or intractable complexity.
+Traditionally, the extraction of clean mathematical models from systems, such as ordinary differential equations, is considered infeasible.
+Simultaneously, a significant amount of work has now been performed on the verification of models with black-box components, such as DryVR~\cite{fan2017dryvr}.
+Systems such as these treat the numerous parameters of a black-box component as a continuous trajectory.
+In this chapter, we will discover why this treatment of systems as black-box components, similar to the emulation-based approaches we have considered thus far, is not sufficient for the verification of systems.
+We will introduce the InteGreat system~\cite{bland2023integreat}, which adopt a lifting approach to verification that extracts high-level emulations of systems from binary firmware.
+In the latter sections of this chaper, we will demonstrate how this approach can be used to identify differences between implemented machine code and published mathematical specifications.
 
 \section{Introduction}
 
+Verification of cyber-physical systems (CPS) is a challenging problem, often simplified by the treatment of complex implemented components as black-boxes.
+When considering the system itself, mathematical expressions for these systems must often be translated into low-level languages (C, Ladder Logic, etc.) and compiled for use in a physical system.
+The resulting binary code may also be symbol-stripped and lose information, e.g. the names of variables, present in the original control algorithm.
+In many cases, however, because the system retains something of the high-level semantics, it should still be possible to recover the original high-level model intended for a verification system.
+As an added benefit, by working directly with firmware, we could verify and analyze programs where no high-level specification has been written.
+
+While tools such as Ghidra~\cite{eagle2020ghidra} are capable of lifting a binary to pseudo-C representations, these outputs cannot be translated into a more abstract representation of the program.
+Adapting these existing tools to lift to a given higher-level representation also requires significant effort, as their internal representations are static and aimed primarily at capturing microarchitectural semantics.
+However, if natural deduction could be applied to express the nature of the semantic patterns as they appear in the binary, then lifting to a particular abstract representation could be made modular and portable.
+This presents two particular problems of extraction and incorporation: in the former case, the ability to derive an abstract semantic from machine code operations, and the ability to incorporate outside information into the lifting process.
+
+The current state of the art in function extraction involves the use of binary symbolic execution to derive a model of the binary's code over the theory of bitvectors, as was performed in part in Section~\ref{sec:jetset-eval}.
+This approach deduces a mathematical model of a computation's behavior, but does not provide any framework for encoding common rules of abstraction.
+Moreover, no current binary symbolic execution systems do not provide any means of precisely defining slices of the program to serve as boundaries for the lifting process, and rely on the user to isolate and substitute any subtrees of the AST for simplified expressions.
+The result is a set of systems that could theoretically serve to automatically lift a binary to a higher-level representation based upon logical rules, but which in practice lack much of the necessary automation.
+
+We therefore introduce InteGreat, a system which takes in a set of logical lifting rules (provided via Z3~\cite{zthree}) and outputs of symbolic execution to translate closed-source, symbol stripped binary firmware into verifiable mathematical models.
+We achieve this by allowing users to nest and chain rules for lifting and decompilation in a natural, declarative syntax, allowing for the modular capture of complex semantic operations.
+For example, we may associate a sequences of calls to multiple different child functions as a single operation and we lift a sequence of non-adjacent low level instructions into a single function call using the same effective syntax.
+To our knowledge, this is the first lifter to use explicit logical propositions in targeting the correct abstract domain representation of a binary program.
+
+InteGreat significantly extends the angr~\cite{angrsok} symbolic executor to bind the semantics of analyzed program slices into meaningful abstract symbols, replacing complex inner computations with a uniform representations, while maintaining the integrity of the symbolic state's semantics.
+In particular, we focus on lifting to continuous equations that may be ``dropped in'' as Matlab Simulink function blocks~\cite{matlab} for evaluation in the context of an environmental model.
+Under the system's default operation, a user only needs to specify entry and exit points in the firmware binary, and the system will replace function calls with uninterpreted functions, lifting sequences of otherwise complex operations into a single symbolic value.
+
+To demonstrate the capabilities of such a system, we use InteGreat to show how logical rules can be used to lift continuous equations from a quad-copter firmware implementing Sebastian Madgwick's Orientation Filter~\cite{madgwick, drone}, and demonstrate these lifted equations uncover an implementation error in the quad-copter firmware, finding a three-way difference between the stabilization algorithm's mathematical representation, C, and third-party C implementations.
+We also analyze a PLC firmware regulating a chemical plant's reactor pressure~\cite{ICSREF} and use the equations recovered by InteGreat to determine the sensor inputs necessary to precisely destabilize the reactor pressure of the chemical plant and exactly reproduce a code upload attack performed by prior literature.
+The lifted representation of the chemical plant's firmware also communicates a subtle discovery: it is not possible to automatically infer representations of analog-to-digital unit conversions at I/O boundaries without additional information from a model of the physical environment.
+
 \section{Related Work on Lifting}
+
+This work brings together multiple methods from a rich history of verification of software and firmware systems.
+While our discovery, the application of logics to the domain of decompilation and lifting, is novel, we are indebted to prior work for the introduction of nested abstractions, abstract interpretation, program slicing, function summarization, and many other techniques:
+
+\begin{itemize}
+	\item Currie et al.~\cite{currie2006embedded} use the substitution of program slices with uninterpreted functions to determine program equivalence across compiler optimizations.
+	However, they do not address the idea of using nested logical rules to perform lift binary programs or the complexities involved in stitching together abstracted program slices.
+	We provide a total framework for retaining viable semantics before and after skipping a program slice, even at the bitvector level.
+	In fact, Currie et al. note that there may be ways to improve the accuracy of their matching by ``combining uninterpreted functions with a bit of bit-level analysis.''
+	\item Sery et. al~\cite{interpolation} leverage the FunFrog system~\cite{sery2012funfrog} to extract function summaries after an initial verification run using source-code level symbolic execution to recover a Bounded Model Checker (BMC) logical formula representing the original program.
+	The work performs AST slicing and variable binding methods similar to our own and uses the Craig interpolation (the identification of a sub-proposition that implies two other statements) to refine their function summaries.
+	In contrast, InteGreat targets firmware and thus supports the abstraction of micro-architectural semantics.
+	We also introduce the idea of using logical formulae to give rules for the translation rather than strict substitution of abstracted program slices based upon the semantics of the slices themselves (interpolation).
+	\item A line of work has been done using symbolic execution to perform model extraction and subsequently verification on the extracted models.
+	SPIN~\cite{spin}, defined the term ``model extraction'' and applied model-checking on aero-space flight software.
+	Babi\'c and Hu~\cite{babic2007structural} used natural abstraction boundary identification and symbolic execution to optimize the performance of verification.
+	Hernandez et al.~\cite{firmusb} and~\cite{cryto-symex} used symbolic execution to extract and verify protocol models.
+	The same authors also noted the importance of rounding the floating-point precision error on verifying their extracted models in~\cite{precision}.
+	Jackson and Woodward~\cite{lightweight-oo} extracted object-oriented (OO) models from Java byte-code,~\cite{oo-model} extracted OO data models from weakly-typed source code. 
+	Bandera~\cite{tool-supported-program-abstraction} is a tool for user-guided extraction of finite-state automata from Java programs, however, the tool requires access to source code, and focuses on abstracting single variables rather than program slices.
+	While all of these techniques could improve InteGreat, prior work does not address the possibility of a generic framework for the specification of lifting operations, and does not solve the specific problems involved in stitching together uninterpreted functions as abstractions.
+	Our work also does not rely on static matching of semantic patterns and supports nested and chained natural deduction rules for lifting.
+	\item Ji et al.~\cite{transformation} perform backward application of extended sequent calculus rules on symbolic expression trees.
+	Our use of nested logical statements is similar to sequent calculus, however, the goal of Ji et al. was the bisimulation and optimization of the analyzed algorithms using sequent calculus, not to perform lifting.
+\end{itemize}
+
+Ultimately, we were somewhat suprised by the lack of a work approaching the subject of extracting functions from a system using logical operations.
+However, this use case was also motivated by the specific insights introduced in the emulation and modeling of highly complex systems (Chapters~\ref{chap:rehost} and~\ref{chap:info}).
+The InteGreat system draws on the specific challenges of the Jetset and Edact-Ray systems to inform its unique approach to the modeling of systems.
 
 \section{Design of a Logic-based Lifting Specification}
 
-\section{Binary Program Decompilation Problem and Abstraction Undecidability}
+We begin our design of InteGreat with program slices, introduced in Section~\ref{ref:lifting-prelim}, which we denote with $\gamma$, and the location of which we denote $f$.
+By default we resolve each $\gamma$ to a function call boundary, but the determination of each $\gamma$'s location is also user-scriptable via a provided wrapper around Ghidra's static analysis APIs.
+We enforce that the control flow of each slice must have either a total or no overlap with any other slice (an independence system).
 
-\section{Representational Correctness}
+As InteGreat runs, it begins analysis at the innermost $\gamma$ and works outward, identifying all the input and output locations (side effects) of each $\gamma$ via symbolic execution.
+By default, these side effects are used to abstract the semantics of each $\gamma$ into a single uninterpreted function mapped to $f$ (the location of the call).
+Specifically, we perform three actions upon reaching a location $f$ for a given $\gamma$:
+\begin{enumerate}
+	\item We associate $f$ to a set of logical formulae for lifting rules
+	$\phi$, potentially input by a user, providing a deductive
+	sepecification for \emph{how} to lift $f$. For example, encoding the
+	logic of splitting a floating point value across r0 and r1.
+	\item We associate $f$'s symbolic state with the set of input locations
+	of $\gamma$: every potential register and memory location used by the
+	output constraints provided by a full symbolic execution of $\gamma$.
+	These are then available as symbols in $\phi$ to determine the
+	appropriate parameterization of $f$.
+	\item We associate encountering $f$ with a specific timestamp to ensure
+	the lifted representation respects the program's order of operations.
+\end{enumerate}
 
-\section{Verification and Attack Development}
+Our framework provides prospective solutions to the problems of unconstrained pointer values and loop invariant inference during symbolic execution.
+To cope with unconstrained pointers we represent each read or write to memory with both the value and the symbolic expression used to determine the address, and enforce a strict equivalence between the two (discussed next).
+We expect a zero-length program slice and associated $\phi$ to be defined which can be used to resolve any runtime-ambiguous values of pointers.
+For many problematic loops, we can define two program slices: an outer which captures the formulae for handling the loop guard condition and an inner which captures the loop's body expression.
+If suitable, we may then replace the guard condition with a concise symbolic represenation, e.g. $\Sigma$, and the inner with an inferred representation of the effects of the loop body as it relates to the outer operation.
+
+As a fallback for fully automatic use of InteGreat, we accept the traditional symbolic execution search strategy of unrolling loops and provide a few sensible defaults for the search strategy, e.g. taking the state that generates the most complex set of constraints or the largest number of writes to memory.
+
+Once the specific challenges of potential state explosion are dealt with, each $\gamma$ is associated to a new symbol $s_{0}, s_{1}, \dots$ and $\phi_{0}, \phi_{1}, \dots$ to perform a translation into a new, higher-level language.
+These formulas are also \emph{nestable}, and rules may be written which take some $s$ and $\phi$ as input to produce a second $s'$ and $\phi'$.
+For InteGreat's evaluation, we introduce $\phi$ and $\gamma$ such that unmanagable machine code is be abstracted into a Matlab-identical representation inside Z3.
+Thus, theorem prover expressions serve as a flexible intermediate representation throughout the lifting process.
+
+\paragraph{Symbolic Memory}
+\label{sec:symb-mem-expl}
+In most firmware programs, inputs and outputs are context-sensitive to its program state, for example, the dynamic execution stack, or a dereferenced pointer to a memory location.
+It is thus necessary for InteGreat to allow symbolic expressions as memory addresses via a $LOC$ function.
+
+InteGreat accomplishes this by implementing a symbolic memory model, extending Trt{\'\i}k et al.'s model~\cite{symbolic-memory}, under-constrained memory~\cite{Under-Constrained}, and incorporating the core ideas of Coppa et al.~\cite{coppa2017rethinking}.
+Leveraging the angr event hook infrastructure, InteGreat intercepts all program state modifications, and replaces them with InteGreat's symbolic memory model. 
+During each pointer dereference, the symbolic memory model is queried with the intercepted dynamic symbolic state of the symbolic executor.
+
+We implement pointer reasoning by proving the equivalence of symbolic expressions for pointer values.
+When resolving memory, we use timestamps associated with each memory operation and a strict equivalence check on the pointer expression to determine when a memory location is modified.
+For example, given two pointers $p_{1}$ and $p_{2}$, if $p_{1} = 50$ and $p_{2} = 50$ at runtime and we are checking $read(p_{1}) = write(p_{2})$, we will return that they are NOT the same memory location. 
+That is, we do not assume runtime knowledge. 
+We assume that if such knowledge is needed, a zero-size program slice (an entry point address equivalent to the exit address) will be defined that will identify this runtime equivalence, and other tools exist for this~\cite{hind2001pointer}.
+
+\paragraph{Correctness}
+Traditional views of compiler (and by extension, decompiler) correctness involve ensuring uncompiled programs, interpreted over an input, result in the same output as compiled programs interpreted over the same input.
+In the bottom-down view of compilation from a language operating over $\mathbb{R}$, we already implicitly accept the imprecision introduced by compiler/ISA when equations were compiled are executed.
+One argument for the correctness of InteGreat's approach is that we may implicitly accept the imprecision introduced by the inverse operation: lifting from the ISA to the real domain semantics.
+
+However, this does not deal explicitly with the information lost in InteGreat's approach to lifting, as features from the initial domain $\mathbb{D}$ may not be present in $\mathbb{D}'$.
+In our earlier example, we mapped from an operation over a Galois field of 64-bit floating point values to an uninterpreted function over $\mathbb{R}$, and the semantics of the Galois field are not preserved in the uninterpreted function.
+This trust in the decompiler is further strained when we begin to talk about abstracting arbitrary, complex program slices.
+For example, the compiled version of a derivative function may be entirely different in implementation than a Matlab continuous domain equivalent.
+
+We therefore rediscover a common solution to the problem of determining equivalence between complex computations: correctness is ensured by a reduction proof from the original function to the abstract function given a configurable error bound on the difference between outputs in $\mathbb{D}$ and $\mathbb{D}'$, $\varepsilon$.
+A similar approach was outlined in Section~\ref{sec:encdec}.
+The structure and representation of this proof is flexible and domain-specific, so long as it incorporates $\Phi$ and guarantees the limit $\varepsilon$ holds.
+Proofs must be performed on a case-by-case basis as the non-abstracted function and targeted domains can take any of infinite forms.
+For example, a proof for a straight-line program performing floating point operations could consider the error introduced by each operational step in the concrete case, and then chain these values together in order to derive a total acceptable bound for $\varepsilon$.
+In the present chapter, we forgo a general proof and demonstrate equivalence empirically.
+
+\paragraph{InteGreat's Interface}
+
+\emph{Sufficient input to InteGreat is a program binary, an entry point at which to begin symbolic execution and a list of start and end addresses of program slices.} 
+Slices $\gamma$ take the form of a range of addresses (potentially of zero length), a type of instruction, or an expression over the names of other slices.
+To avoid repeating the same $\phi$ for multiple $\gamma$ referring to the same operations, we allow multiple range specifications for a given slice.
+This input is provided by a series of files which name each $\gamma$ and provide $\Phi$ via a \emph{binds} array of assignments where the left hand side is a symbol name and the right hand side is a Z3 expression.
+
+\emph{Binds} is initialized with the following two symbolic name sets:
+\begin{enumerate}
+	\item The inferred inputs of $\gamma$, e.g. i0, i1, \dots,
+	\item Any prior expressions in the symbolic executor's state prior to reaching $\gamma$, and (optionally)
+	\item The full \emph{inner} expression sets for $\gamma'$ inside of $\gamma$ before and after the application of the $\phi'$ associated to the specification of $\gamma'$.
+\end{enumerate}
+(3) is equivalent to preserving in memory the outputs of prior InteGreat lifting steps, allowing us to nest lifting rules in a modular fashion, and (2) allows us to ``chain'' lifting rules such that, given $\gamma'$ following $\gamma$, symbols returned by $\gamma$ can be used to reason about the lifting of returned by $\gamma'$.
+
+The output of InteGreat is a simplified Z3 AST corresponding to the application of the lifting rules. 
+In the evaluation of InteGreat, we structured program slices and inference rules such that translating the Z3 AST to Matlab was trivial.
+However, the generic structure of Z3 as an intermediate representation makes it suitable for other tasks, e.g. inferring fixed points and loop invariants for lifted code~\cite{si2018learning}.
+
+% All functions are implemented in Python 3.9.
+
+% 2. \emph{Sequent Inference Algorithm} - This algorithm is used to perform sequent inference on the symbolic execution state.
+% 3. \emph{Abstraction Resolution Algorithm} - This algorithm is used to perform abstraction resolution on the sequent inference results.
+% 4. \emph{Director Algorithm} - This algorithm is used to perform symbolic execution on the merged state.
+
+% Hooks & symbolic memory
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{algorithm}
+    \caption{Abstraction Lifting}
+    \begin{algorithmic}[1]
+        \Require $\gamma$, $binds$
+        \Ensure $A_{\Phi(P)}^{f}$
+	    \State $A_{P}^{f} \leftarrow SE_{\mathbb{D}}(\gamma)$
+ 	    \For{\textbf{each} i \textbf{in} inputs($A_{P}^{f}$)} \algorithmiccomment{Bind input to expressions}
+	    \State $binds_{i} \leftarrow READ(LOC(i))$
+        \EndFor
+        \For{\textbf{each} o \textbf{in} outputs($A_{P}^{f}$)} \algorithmiccomment{Bind abstract expressions to output}
+	
+	    \State $E[outputs_{o}] \leftarrow \Phi_{\gamma}(o)$ \algorithmiccomment{Apply deduction rules}
+	    \State $v \leftarrow new\_sym\_name()$
+	    \State $binds_{v} \leftarrow E[outputs_{o}]$ \algorithmiccomment{Associate name to expression}
+	    \State $WRITE(LOC(o), v)$ \algorithmiccomment{Write abstraction to symbolic memory}
+        \EndFor
+
+        \For{\textbf{each} b \textbf{in} $binds$}
+	    \State $binds_{b} \leftarrow \Phi(b)$\algorithmiccomment{Common axiom support}
+        \EndFor
+    \end{algorithmic}
+    \label{alg:abst-binding}
+\end{algorithm}
+
+\paragraph{InteGreat's Algorithm for Lifting}
+\label{sec:integreat-alg}
+Before describing the InteGreat's lifting algorithm, we introduce some notation.
+Let $A_{P}^{f}$ to refer to the AST returned by angr prior to the application of $\Phi$, similar to Def.~\ref{def:nested-summarization}, and $E$ to refer to an intermediate storage location for Z3 AST expressions.
+$\Phi_{\gamma}$ refers to the set of logical statements registered for $\gamma$, $\Phi_{\gamma}(o)$ refers to the full set of statements used to derive $o$ in $\Phi$ from the \emph{binds} array.
+Recall that we also implement a symbolic memory addressing system for unconstrained pointer values; we represent locations (either in registers or memory) through the $LOC$ function.
+Note that $READ$ and $WRITE$ operate on $A_{P}^{f}$ to produce $A_{\Phi(P)}^{f}$.
+$SE_{\mathbb{D}}(\gamma)$ refers to an augmented form of symbolic execution of $\gamma$ using angr in the domain $\mathbb{D}$.
+
+Algorithm~\ref{alg:abst-binding} presents InteGreat's core lifting mechanics.
+As noted, the input to the algorithm is a program slice $\gamma$ and an existing set of symbolic bindings $binds$, and the output is a new AST $A_{\Phi(P)}^{f} \subseteq \mathbb{D}'$, representing the lifted program.
+When $SE$ encounters an inner $\gamma'$, we look up the associated specification for $\gamma'$ and apply Alg.~\ref{alg:abst-binding} recursively to $\gamma'$ and propagate our results to the current symbolic state appropriately.
+
+Line 1 retrieves a set of registers and memory locations $inputs, outputs$ describing the micro-architectural input and output locations of a program slice.
+These are provided via a symbolic executor with modifications to support the use of symbolic values as memory addresses.
+For locations with existing symbolic expressions, InteGreat's symbolic memory dynamically fetches the most recent written expression, or else InteGreat writes and returns a fresh symbolic variable in that location (the $READ$ function).
+
+For values stored in memory, InteGreat dereferences the input locations to the correct symbolic expressions representing their values in InteGreat's symbolic memory model (discussed next).
+These symbolic values are then assigned into the inputs symbols i0, i1, \dots of the \emph{binds} array (lines 2--4).
+Note that the inputs may be sets of previously lifted abstractions.
+
+InteGreat then replaces the existing lower-level, concrete expressions returned by symbolic execution for the slice's outputs with the higher-level abstraction (lines 5--10).
+For example, consider a floating point multiply over registers $r_{0}$ and $r_{1}$, with output in $r_{0}$, with a simple $\phi$ that returns an uninterpreted function $f$ over the inputs.
+A fresh symbolic variable $v$ would be created and written to the symbolic memory model, with the concrete register location $r_{0}$ storing $r_{0} = v \mapsto f(i_{0},i_{1})$ rather than $r_{0} = i_{0} * i_{1}$.
+This step also introduces fresh symbolic mappings to expressiosn in the \emph{binds} state.
+All future symbolic execution and calls to Alg.~\ref{alg:abst-binding} will now operate on the abstractions provided by $binds$ rather than the original concrete symbolic expression for $\gamma$.
+
+Lines 11 through 13 of Alg.~\ref{alg:abst-binding} provide support for common axioms.
+The full set of $\Phi$ for $\gamma$ are reapplied at the end of analysis to resolve existing AST features into higher-level abstractions.
+We found this useful for lifting certain common operations across different slices.
+For example, we created rules for treating certain type-casts as equivalent, e.g. when a double is rounded to a float or a float is extended to a double, the Galois field variable should still refer to the same lifted variable over $\mathbb{R}$.
+
+\section{Experiments on a Quad-copter and Programmable Logic Controller}
+
+This section presents the evaluation of InteGreat on a quad-copter firmware and a PLC firmware stabilizing the reactor pressure of a chemical plant.
+% All experiments were conducted on an Intel 11th Gen 16 Core i7-11850H 2.50 GHz Processor with 16.0 GB of RAM.
+In particular, we investigated a few concrete questions regarding the possiblities of InteGreat's design.
+We first consider whether, given the correct $\Phi$, InteGreat can correctly lift machine code programs to the continuous domain.
+Next, we determine whether InteGreat's approach can help identify inconsistencies between published results and different implementations of the same algorithm.
+Then, InteGreat's lifted representations are testing in the analysis and discovery of novel features in a Progammable Logic Controller.
+Finally, we consider whether it is possible to correctly reproduce idealized models and attacks on cyberphysical systems using InteGreat's lifted representations.
+
+To answer these questions, we evaluate InteGreat on two real-world embedded systems: a quad-copter firmware and a PLC firmware.
+We considered the firmware for both of these systems to be closed-source and symbol-stripped: the inputs to InteGreat are not dependent on any meaningful variable names or function names.
+We also not that the firmware was not obfuscated, and that the firmware is not using any anti-analysis techniques.
+
+\input{madg-ana}
+
+The quad-copter firmware was compiled for ARM32, EABI5 version 1, and statically linked.
+We targeted four versions of the quad-copter's stabilization algorithm, a compiled version present in a firmware image on Github~\cite{drone}, a version compiled from the specification given by the algorithm's original publication~\cite{madgwick}, a \emph{correct} version of the algorithm written for Matlab, and a \emph{correct} version of the algorithm written in C, compiled using the same ARM compiler, and then lifted by InteGreat.
+
+\begin{table}
+\caption{14 of the 18 quad-copter \emph{binds} array elements used to lift continuous equations from binary firmware using InteGreat.}
+\label{tab:quadcopt-binds}
+\input{binds-quad}
+\end{table}
+
+The inputs to InteGreat used to lift the quad-copter firmware consisted of 18 program slices ($\gamma$) and 24 \emph{binds} entries ($\Phi$). %, given in Appendix Table~\ref{tab:quadcopt-binds}
+We depict the results of these lifting rules in Fig.~\ref{fig:quad-analytics}, and include the specification of 16 these bindings in Table~\ref{tab:quadcopt-binds} as an example.
+The left side demonstrates the structure by which we were able to nest lifting rules.
+The right side demonstrates the modularity of lifting rule applications across different code locations, i.e. the slice for lifting a floating point multiply could be applied across several distinct code locations.
+
+\input{plc-ana}
+
+The PLC firmware was compiled both using CoDeSys 2.3.9.44 and e!COCKPIT 3.5.16.30 for the WAGO 750-881 and PFC200 G2 750-8217 PLCs, respectively.
+We recovered the same results for both of these PLCs and present the results for the latter in this paper, as it is the more recent version.
+Both PLCs use the same CPU architecture (ARM32), and the firmware is statically linked.
+
+We targeted an algorithm in PLC firmware for actuating a pressure-controlling valve in the Tennessee Eastman Challenge~\cite{Tennessee-Eastman}, a benchmark for modeling and analyzing the dynamics of industrial control systems.
+The firmware is written in the structured text, IEC 61131-3, programming language and then compiled to a binary for the PLC.
+The firmware in question was provided by ICSREF~\cite{ICSREF}, a security paper which staged a code upload attack on a physical PLC connected to a Matlab environmental model.
+Additional details of this attack's physical setup are given in~\cite{keliris2016machine}.
+
+The specification used to lift the PLC firmware consisted of 3 program slices and 3 \emph{binds} entries generating uninterpreted functions for three cases: a proportional-integral-derivative call, a derivative call, and an integral call.
+We depict the results of these lifting rules in Fig.~\ref{fig:plc-stats}.
+The PLC had significantly fewer binds as it did not rely on a software floating point ABI and Matlab, the target domain, had pre-existing functions for integral and derivative.
+
+\input{quadcopter}
+\input{plc}
 
 \section{Summary}

@@ -1,0 +1,94 @@
+\begin{figure*}
+    \centering
+    \hfill
+	\begin{subfigure}[b]{0.49\textwidth}{}
+	\centering
+	\resizebox{0.8\width}{0.8\height}{
+\begin{tikzpicture}[xscale=0.8, every node/.style={scale=0.80}]
+  \def\t{0.01} % stem half-thickness
+    \node[above] at (1, 0.3)(fmul) {fmul};
+    \node[above] at (2, 0.3)(addsf3) {...};
+    \node[above] at (3, 0.3)(f2d) {f2d};
+    \node[above] at (4, 0.25)(sqrt) {sqrt};
+    \node[above] at (5, 0.3)(truncdfsf) {trunc};
+    \node[above] at (6, 0.3)(fsub) {...};
+    \node[above] at (7, 0.3)(muldf3) {muldf};
+    \node[above] at (8, 0.3)(divdf3) {divdf};
+    \node[above] at (9, 0.3)(fdiv) {...};
+    \node[above] at (10, 0.3)(atan2) {atan2};
+    \node[above] at (11, 0.3)(asin) {asin};
+    \node[above] at (12, 0.25)(fcmpeq) {fcmpeq};
+  % BRANCHES
+  \draw[branch,line width=4] (0,0) -- (13,0) ;
+   % node[right] {Quadcopter};
+
+    \draw[branch,thick] (fcmpeq) to (12, -0.3) node[below] {1.0};
+
+  \draw[branch,thick] (fmul) to (1, 1.5);
+  \draw[branch,thick] (5,1.3) -- (5,1.5);
+  \draw[branch,thick] (1,1.5) -- (5,1.5) node[midway,above] {mul};
+
+  \draw[branch,thick] (f2d) to (3, 1);
+  \draw[branch,thick] (muldf3) to (7, 1);
+  \draw[branch,thick] (truncdfsf) to (5, 1);
+  \draw[branch,thick] (3,1) -- (7,1) node[midway,above] {cmul};
+
+  \draw[branch,thick] (f2d) to (3, -0.3);
+  \draw[branch,thick] (sqrt) to (4, -0.3);
+  \draw[branch,thick] (truncdfsf) to (5, -0.3);
+  \draw[branch,thick] (3,-0.3) -- (5,-0.3) node[midway,below] {csqrt};
+  
+  \draw[branch,thick] (3, -0.5) to (3, -0.8);
+  \draw[branch,thick] (5, -0.5) to (5, -0.8);
+  \draw[branch,thick] (muldf3)  to (7, -0.8);
+  \draw[branch,thick] (divdf3)  to (8, -0.8);
+  \draw[branch,thick] (atan2)  to (10, -0.8);
+  \draw[branch,thick] (3, -0.8) -- (10, -0.8);
+    \node[above] at (6, -0.8) {catan2};
+
+  \draw[branch,thick] (3, -1) to (3, -1.3);
+  \draw[branch,thick] (5, -1) to (5, -1.3);
+  \draw[branch,thick] (7, -1)  to (7, -1.3);
+  \draw[branch,thick] (8, -1)  to (8, -1.3);
+  \draw[branch,thick] (asin)  to (11, -1.3);
+  \draw[branch,thick] (3, -1.3) -- (11, -1.3) node[midway,below] {casin};
+
+
+  \draw[branch,thick] (1, 0) to (fmul);
+  \draw[branch,thick] (2, 0) to (addsf3);
+  \draw[branch,thick] (3, 0) to (f2d);
+  \draw[branch,thick] (4, 0) to (sqrt);
+  \draw[branch,thick] (5, 0) to (truncdfsf);
+  \draw[branch,thick] (6, 0) to (fsub);
+  \draw[branch,thick] (7, 0) to (muldf3);
+  \draw[branch,thick] (8, 0) to  (divdf3);
+  \draw[branch,thick] (9, 0) to (fdiv);
+  \draw[branch,thick] (10, 0) to  (atan2);
+  \draw[branch,thick] (11, 0) to (asin);
+  \draw[branch,thick] (12, 0) to (fcmpeq);
+  
+\end{tikzpicture}
+}
+\caption{}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\begin{tabular}{ |l|ccc| } 
+ \hline
+  Version & \#Lifts & \#Symbols & \#LoA \\ [0.5ex] 
+ \hline
+ \hline
+  Firmware & 335 & 151 & 728 \\ [0.3ex] 
+  Corrected & 343 & 149 & 730 \\ [0.3ex] 
+  Published & 283 & 159 & 637 \\ [0.3ex] 
+ \hline
+\end{tabular}
+	\caption{}
+\label{fig:table-madgwick}
+\end{subfigure}
+\hfill
+\caption{\textbf{(a)}: Depiction of hierarchy of lifting rules for a quad-copter stabilization algorithm. \textbf{(b)}: Quad-copter firmware analytics, broken down into the number of program slice locations lifted, unique symbolic variables used, and lines of assembly code (LoA).}
+\label{fig:quad-analytics}
+\end{figure*}
+

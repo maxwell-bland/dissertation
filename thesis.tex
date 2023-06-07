@@ -1,9 +1,38 @@
-\documentclass[
-    11pt,
-    edeposit,
-    forcebottom]{uiucthesis2020}
+\documentclass[edeposit,mixcasechap,tocnosub,noragright,centerchapter,fullpagesingle,12pt]{uiuc_csthesis21}
+
+% Updated version of the ECE department's latex resources
+
+% Use draftthesis for notes and date markings on every page.  Useful when you
+%   have multiple copies floating around.
+% Use offcenter for the extra .5 inch on the left side. Needed with fullpage and fancy.
+% Use mixcasechap for compatibility with hyperref package, which does NOT like all caps default
+% Use edeposit for the adviser/committee on the title page.
+% Use tocnosub to suppress subsection and lower entries in the TOC.
+% PhD candidates use "proquest" for the proquest abstract.
+
+\makeatletter
+
+\usepackage{setspace}  % Useful for single, 1.5, and double spacing
+\usepackage{url}  % Useful for URLs
+%\usepackage{hyperref}  % Another package useful for URLs
+
+\usepackage{lscape}  % Useful for wide tables or figures.
+% Following command definition is from Stack Exchange: https://tex.stackexchange.com/questions/278113/single-landscape-page-with-page-number-at-the-bottom 
+% It adds *rotated* page numbers to the bottom of landscaped pages to meet the Graduate College standards (see page 7 here: https://grad.illinois.edu/files/pdfs/thesis-sample-chapter-straight-numbering.pdf)
+\def\fillandplacepagenumber{
+	\par
+	\pagestyle{empty}
+	\vbox to 0pt{\vss}
+	\vfill
+	\vbox to 0pt{
+		\baselineskip 0pt
+		\hbox to \linewidth{\hss}
+		\baselineskip\footskip
+		\hbox to \linewidth{\hfil\thepage\hfil}\vss
+	}
+}
+
 \input{thesisstyle}
-\addbibresource{references.bib}
 
 \input{title}
 
@@ -11,28 +40,24 @@
 
 \maketitle
 
-\begin{frontmatter}
+\parindent 1em%
+
+\frontmatter
 
 \input{abstract}
 
-\input{dedication}
-
 \input{acks}
 
-% NOTE: recommended by the microtype docs to disable protrusion for the toc
-\microtypesetup{protrusion=false}
-\tableofcontents
-\listoftables
-\listoffigures
-\microtypesetup{protrusion=true}
+\input{dedication}
 
-\end{frontmatter}
+% NOTE: recommended by the microtype docs to disable protrusion for the toc
+\tableofcontents
 
 % }}}
 
 % {{{ main matter
 
-\begin{mainmatter}
+\mainmatter
 
 \input{introduction}
 \input{preliminaries}
@@ -42,20 +67,15 @@
 \input{translation}
 \input{conclusion}
 
-\end{mainmatter}
-
 % }}}
 
 % {{{ back matter
-
-\begin{backmatter}
-\printbibliography
-\end{backmatter}
+\bibliographystyle{IEEE_ECE}
+\bibliography{references}  % Put references in BibTeX format in thesisrefs.bib.
 
 \appendix
-\chapter{My Appendix}
 
-\Blindtext[6]
+\backmatter
 
 % }}}
 

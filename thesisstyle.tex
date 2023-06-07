@@ -3,12 +3,16 @@
 \usepackage{blindtext}
 
 % math
+\usepackage[T1]{fontenc}
 \usepackage{siunitx}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{stmaryrd}
 \usepackage{cases}
+\usepackage{mathtools}
 \usepackage{algorithm,algpseudocode}
+\newfloat{algorithm}{t}{lop}
+\renewcommand{\algorithmiccomment}[1]{// #1}
 
 % pretty links
 \usepackage{xparse}
@@ -27,10 +31,10 @@
 
 \usepackage{graphicx}
 
-\usepackage[
-    style=apa,
-    backend=biber,
-    style=numeric ]{biblatex}
+% \usepackage[
+%     style=apa,
+%     backend=biber,
+%     style=numeric ]{biblatex}
 
 % better environments
 \usepackage[shortlabels]{enumitem}
@@ -70,8 +74,6 @@
 
 % allow subsubsections in the TOC, if there are any
 % NOTE: if you got to subsubsections, you probably have too many!
-\setcounter{tocdepth}{\subsubsectiontocdepth}
-\setcounter{secnumdepth}{\subsubsectionnumdepth}
 
 % NOTE: if there are many levels of indentation int the TOC, making it flat
 % might be a good option with the following options
@@ -130,5 +132,39 @@
 \newtheoremin{proposition}{Proposition}{section}
 \newtheoremin{lemma}{Lemma}{section}
 \newtheoremin{theorem}{Theorem}{section}
+
+\colorlet{myblue}{blue!70!black}
+\colorlet{mylightblue}{blue!10}
+\colorlet{branch}{black}
+\colorlet{evolcol}{green!50!black}
+\colorlet{natalcol}{red!50!white!60!black}
+\colorlet{hormcol}{orange!70!black}
+\colorlet{ethcol}{yellow!60!black}
+\colorlet{stimcol}{red!80!black}
+\colorlet{neurcol}{blue!80!black}
+\tikzset{>=latex} % for LaTeX arrow head
+\usetikzlibrary{tikzmark} % for subnode
+\usetikzlibrary{decorations.pathreplacing} % for curly braces
+
+% make listings pretty
+% configure listings for C
+\lstset{language=C}
+% configure style for ASE 2023
+\lstset{basicstyle=\ttfamily}
+\lstset{keywordstyle=\color{blue}\ttfamily}
+\lstset{commentstyle=\color{gray}\ttfamily}
+\lstset{stringstyle=\color{red}\ttfamily}
+\lstset{showstringspaces=false}
+\lstset{breaklines=true}
+\lstset{breakatwhitespace=true}
+\lstset{tabsize=2}
+\lstset{numbers=left}
+\lstset{numbersep=5pt}
+\lstset{numberstyle=\tiny\color{gray}}
+\lstset{frame=single}
+\lstset{rulecolor=\color{black}}
+\lstset{captionpos=b}
+\lstset{escapeinside={(*@}{@*)}}
+\lstset{morekeywords={if,else,return,for,while,do,switch,case,default,break}}
 
 % }}}

@@ -29,6 +29,7 @@ Closely related is the challenge of \emph{memory aliasing}, which occurs when th
 Additionally, there is the \emph{environmental modeling} problem, where symbolic execution is unsound due to missing context, typically because the specific execution behavior of the hardware is not present, e.g. interrupts or highly-specific microarchitectural features.
 
 \subsection{Lifting}
+\label{ref:lifting-prelim}
 
 We contrast abstract interpretation with the notion of \emph{lifting}, a borrowed term concept from category theory, where given a structure-preserving map from one mathematical structure to another of the same type (a morphism), $f: X \rightarrow Y$,  and another $g: Z \rightarrow Y$, a lifting of $f$ to $Z$ is a morphism $h: X \rightarrow Z$ such that $f = g \circ h$, or more simply, a function that points to another representation that \emph{may} more closely resemble the structure $Y$ but also has a morphism to $Y$ (Fig.~\ref{fig:lift}).
 

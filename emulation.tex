@@ -48,15 +48,11 @@ These helper routines and the translation rules for the simulator form an interm
 The simulator may then be reused and leveraged to emulate a number of systems that are based on the represented ISA without necessitating ownership of a chip implementing the ISA.
 
 \begin{example}[QEMU]
-
+\end{example}
 QEMU is a general purpose emulator that supports a wide variety of ISAs and hardware peripherals~\cite{bellard2005qemu}.
 QEMU is both a full system emulator, meaning that it is capable of emulating the behavior of an entire system, including peripherals, and capable of emulating the behavior of a processor in a virtual machine, which allows it to leverage the virtual machine extensions of the host system to accelerate the emulation of the target processor.
 In cases where native execution is not possible, QEMU will emulate the instruction by executing a sequence of Tiny Code Generator (TCG) instructions operating over a C struct that stores the target architecture's microarchitectural state.
 For example, the following PowerPC instruction:
-
-% make listings pretty
-\lstset{basicstyle=\ttfamily, keywordstyle=\color{blue}\ttfamily, stringstyle=\color{red}\ttfamily, commentstyle=\color{green}\ttfamily, morecomment=[l][\color{magenta}]{\#}}
-
 
 \begin{center}
 \begin{lstlisting}[]
@@ -76,8 +72,6 @@ Due to the complexity of certain microarchitectural semantics, QEMU also contain
 These helper functions are triggered by failures in the translation process, and because not all of them are supported or correct, QEMU serves to emulate targets rather than reproduce them.
 
 Note that the emulation process itself is composed of a larger execution loop, which is responsible for fetching instructions, translating them to TCG instructions, executing them, and modeling the behavior of hardware peripherals and interactions between multiple processors with respect to a given ISA's interfaces.
-
-\end{example}
 
 \paragraph{Hardware Peripherals}
 \label{sec:periphs}
@@ -111,7 +105,7 @@ If the simulator is sufficient, then it is also possible to use active instrumen
 \begin{tabular}{|l|l|}
 \hline
 \textbf{Technique} & \textbf{Description} \\ \hline
-\multirow{2}{*}{Instruction Translation Modification} & \multirow{2}{*}{Modifies the translation of or injects instructions} \\
+\multirow{2}{*}{Instruction Injection} & \multirow{2}{*}{Modifies the translation of or injects instructions} \\
  & \\ \hline
 \multirow{2}{*}{Data Injection} & \multirow{2}{*}{Introduces data into the system at some location} \\
  & \\ \hline
@@ -299,6 +293,7 @@ We relate this measure of mutual information to the capacity for an emulation to
 Shannon's information channel is often also generalized into an \emph{information flow} which moves between different privilege domains and quantifies security~\cite{sabelfeld2003language, lowe2002quantifying}.
 
 \section{Encoding, Decoding, and Modeling}
+\label{sec:encdec}
 
 The formalization of \emph{codes}, systems of rules for the conversion of information, can unify many challenges presented by hardware emulators of Section~\ref{sec:hardemu}, dynamic analysis of Section~\ref{sec:dynanal}, and high level emulation of Section~\ref{sec:highlevel}.
 Traditional coding theory is concerned with the design of codes that can be used for the reliable and efficient transmission of information across a noisy channel~\cite{van1971coding, richardson2008modern, bierbrauer2016introduction}.

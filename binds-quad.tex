@@ -1,0 +1,122 @@
+\begin{tabular}{|l|p{11cm}|}
+	\hline
+	\textbf{Program slice C code name} & \textbf{Associated \emph{binds} array} \\ \hline
+	\hline
+\_\_addsf3       & 
+
+"o0": "binds['i0'] + binds['i1']"
+ \\ \hline
+\_\_aeabi\_f2d    & 
+
+"tmp": "z3.fpToFP(z3.RNE(), binds['i0'], z3.FPSort(11, 53))",
+ \\
+                      & 
+
+"o0": "z3.Extract(31, 0, z3.fpToIEEEBV(binds['tmp']))",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, z3.fpToIEEEBV(binds['tmp']))"
+ \\ \hline
+\_\_aeabi\_fcmpeq & 
+
+"o0": "z3.If(binds['i0'] == binds['i1'], z3.FPVal(1.0, z3.FPSort(8, 24)), z3.FPVal(0.0, z3.FPSort(8, 24)))"
+ \\ \hline
+\_\_aeabi\_fdiv & 
+
+"o0": "binds['i0'] / binds['i1']"
+ \\ \hline
+\_\_aeabi\_fmul & 
+
+"o0": "binds['i0'] * binds['i1']"
+ \\ \hline
+\_\_aeabi\_fsub & 
+
+"o0": "binds['i0'] - binds['i1']"
+ \\ \hline
+\_\_divdf3 & 
+
+"tmp": "z3.fpBVToFP(z3.Concat(binds['i1'], binds['i0']), z3.FPSort(11, 53)) / z3.fpBVToFP(z3.Concat(binds['i3'], binds['i2']), z3.FPSort(11, 53))",
+ \\
+                      & 
+
+"o0": "z3.Extract(31, 0, z3.fpToIEEEBV(binds['tmp']))",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, z3.fpToIEEEBV(binds['tmp']))"
+ \\ \hline
+\_\_muldf3 & 
+
+"tmp": "z3.fpBVToFP(z3.Concat(binds['i1'], binds['i0']), z3.FPSort(11, 53)) * z3.fpBVToFP(z3.Concat(binds['i3'], binds['i2']), z3.FPSort(11, 53))",
+ \\
+                      & 
+
+"o0": "z3.Extract(31, 0, z3.fpToIEEEBV(binds['tmp']))",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, z3.fpToIEEEBV(binds['tmp']))"
+ \\ \hline
+\_\_truncdfsf2 & 
+
+"o0": "z3.fpToFP(z3.RNE(), z3.fpBVToFP(z3.Concat(binds['i1'], binds['i0']), z3.FPSort(11, 53)), z3.FPSort(8, 24))"
+ \\ \hline
+asin & 
+
+"tmp": "z3.Function('asin', *[z3.BitVecSort(32) for \_ in range(2)], z3.BitVecSort(64))(binds['i0'], binds['i1'])",
+ \\
+                      & 
+
+"o0": "z3.Extract(31, 0, binds['tmp'])",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, binds['tmp'])"
+ \\ \hline
+atan2 & 
+
+"o0": "z3.Extract(31, 0, z3.Function('atan2', *[z3.BitVecSort(32) for \_ in range(4)], z3.BitVecSort(64))(binds['i0'], binds['i1'], binds['i2'], binds['i3']))",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, z3.Function('atan2', *[z3.BitVecSort(32) for \_ in range(4)], z3.BitVecSort(64))(binds['i0'], binds['i1'], binds['i2'], binds['i3']))"
+ \\ \hline
+sqrt & 
+
+"tmp": "z3.fpSqrt(z3.RNE(), z3.fpBVToFP(z3.Concat(binds['i1'], binds['i0']), z3.FPSort(11, 53)))",
+ \\
+                      & 
+
+"o0": "z3.Extract(31, 0, z3.fpToIEEEBV(binds['tmp']))",
+ \\
+                      & 
+
+"o1": "z3.Extract(63, 32, z3.fpToIEEEBV(binds['tmp']))"
+ \\ \hline
+neg & 
+
+"o0": "-binds['i0']"
+ \\ \hline
+csqrt & 
+
+"o0": "z3.Function('csqrt', z3.FPSort(8, 24), z3.FPSort(8, 24))(binds['\_\_aeabi\_f2d']['i0'])"
+ \\ \hline
+% cfcmpeq & 
+% 
+% "o0": "z3.FPVal(0.0, z3.FPSort(8, 24))"
+%  \\ \hline
+% cmul & 
+% 
+% "o0": "z3.fpToFP(z3.RNE(), z3.fpToFP(z3.RNE(), binds['\_\_aeabi\_f2d']['i0'], z3.FPSort(11, 53)) * z3.fpBVToFP(z3.Concat(binds['\_\_muldf3']['i3'], binds['\_\_muldf3']['i2']), z3.FPSort(11, 53)), z3.FPSort(8, 24))"
+%  \\ \hline
+% casin & 
+% 
+% "o0": "z3.fpToFP(z3.RNE(), z3.fpToFP(z3.RNE(), z3.Function('asin', z3.FPSort(8, 24), z3.FPSort(8, 24))(binds['\_\_aeabi\_f2d']['i0']), z3.FPSort(11, 53)) * z3.fpBVToFP(z3.Concat( binds['\_\_muldf3']['i3'], z3.BitVecVal(0, 32)), z3.FPSort(11, 53)) / z3.fpBVToFP(z3.Concat(binds['\_\_divdf3']['i3'], binds['\_\_divdf3']['i2']), z3.FPSort(11, 53)), z3.FPSort(8, 24))"
+%  \\ \hline
+% catan2 & 
+% 
+% "o0": "lambda binds: z3.fpToFP(z3.RNE(), z3.fpToFP(z3.RNE(), z3.Function('catan2', z3.FPSort(8, 24), z3.BitVecSort(32), z3.FPSort(8, 24))(binds['\_\_aeabi\_f2d']['i0'], binds['atan2']['i2']), z3.FPSort(11, 53)) * z3.fpBVToFP(z3.Concat(binds['\_\_muldf3']['i3'], z3.BitVecVal(0, 32)), z3.FPSort(11, 53)) / z3.fpBVToFP(z3.Concat(binds['\_\_divdf3']['i3'], binds['\_\_divdf3']['i2']), z3.FPSort(11, 53)), z3.FPSort(8, 24))"
+%  \\
+%  \hline
+\end{tabular}

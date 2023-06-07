@@ -81,12 +81,12 @@ For a 12-point font, 1 unit equals 1/6,000 of an inch (0.0042~mm).
 Glyph advance widths and glyph shifts create a security concern, as an attacker can supply all possible \emph{inputs} to a simulation or high-level emulation of the tool used to create the document and create two significant security risks:
 
 \begin{itemize}
-    \item The precise width of the redaction can be used to eliminate potential redacted texts (Sec.~\ref{sec:equiv-class}).
-    \item Any non-redacted glyph shifts conditioned on redacted glyphs can be used to eliminate potential redacted texts (Sec.~\ref{sec:ms-word}).
+    \item The precise width of the redaction can be used to eliminate potential redacted texts.
+    \item Any non-redacted glyph shifts conditioned on redacted glyphs can be used to eliminate potential redacted texts.
 \end{itemize}
 
 \begin{table*}
-  \small
+	\footnotesize
   \centering
   \caption{Several possible PDF workflows. The left column indicates the operations which to produce the representation on the right.}
   \label{tab:flows}
@@ -185,7 +185,7 @@ We note that attacking the OCR overlay is not always as straightforward as attac
 \label{sec:ms-word}
 
 A dependent scheme is more dangerous to the security of redacted text than an independent scheme.
-In these schemes non-redacted glyph shifts can be dependent upon redacted glyph information, because the non-redacted glyph shifts can be determined \emph{before} redaction (Sec.~\ref{sec:tools}).
+In these schemes non-redacted glyph shifts can be dependent upon redacted glyph information, because the non-redacted glyph shifts can be determined \emph{before} redaction.
 
 \emph{Microsoft Word ``Save as PDF''.}
 In this chapter, our primary simulations model a class of dependent schemes defined by the Microsoft Word software's \emph{Save As PDF} command.
@@ -193,25 +193,6 @@ We reverse-engineered the glyph shifting scheme produced by this command in Micr
 This process took around several months. 
 Word 2007 to 2016 use one scheme, and Word 2019 to present versions use another.
 These two schemes affect thousands of real world document redactions (Sec.~\ref{sec:redaction-attack}).
-
-\lstset{ %
-language=C++,                % choose the language of the code
-basicstyle=\ttfamily\footnotesize,       % the size of the fonts that are used for the code
-numbers=left,                   % where to put the line-numbers
-numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
-stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
-numbersep=5pt,                  % how far the line-numbers are from the code
-backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
-showspaces=false,               % show spaces adding particular underscores
-showstringspaces=false,         % underline spaces within strings
-showtabs=false,                 % show tabs within strings adding particular underscores
-frame=single,           % adds a frame around the code
-tabsize=2,          % sets default tabsize to 2 spaces
-captionpos=b,           % sets the caption-position to bottom
-breaklines=true,        % sets automatic line breaking
-breakatwhitespace=false,    % sets if automatic breaks should only happen at whitespace
-escapeinside={\%*}{*)}          % if you want to add a comment within your code
-}
 
 \begin{figure}
 \begin{lstlisting}
@@ -313,30 +294,23 @@ Then, we scripted WinDBG to identify the last use of a \texttt{rep movs} operati
 \begin{lstlisting}[language=JavaScript]
 function handleInternalWidths() {
     let Regs = host.currentThread.Registers.User;
-
     let iWi = host.parseInt64(Regs.eax);
     /* hack to identify the newline character */
     if (iWi < 0x500) {
         let internalWidth = iWi.toString(10);
-
         internalWidths[characters[pos]] = internalWidth;
         pos += 1;
-
         if (pos == characters.length) {
             internalWidthsArr.push(toJson(internalWidths));
             internalWidths = {};
             pos = 0;
         }
-
         lineend = !lineend;
     }
-
     return false;
 }
-
 function invokeBP(bpCmds) {
     let Control = host.namespace.Debugger.Utility.Control;
-
     Control.ExecuteCommand('bc *');
     host.diagnostics.debugLog("Rewinding Execution...\\n");
     Control.ExecuteCommand('g-');
@@ -348,7 +322,6 @@ function invokeBP(bpCmds) {
     Control.ExecuteCommand('g');
     host.diagnostics.debugLog("Done\\n");
 }
-
 function invokeScript() {
     invokeBP(['bp /w "@\$scriptContents.handleInternalWidths()" 0x65567138']);
     for (var i = 0; i < internalWidthsArr.length; i++) {
@@ -489,7 +462,7 @@ In addition to mutual information, we calculated the probability that the leaked
 In the uniform distribution this is a random guess from the (typically quite small) set of matching candidate words, and in the frequency distribution we select the candidate with the highest frequency in either the NYT corpus (for \emph{Str}, \emph{Acrn}, \emph{Word}, \emph{Ctry}, \emph{Natl}, and \emph{Rgn}) or in the three state voter registration databases (for \emph{FN}, \emph{LN}, \emph{\fnxlnname}, \emph{\fixlnname}, \emph{FNLN}, and \emph{FILN}).
 
 \begin{table*}
-\centering\small
+\centering\footnotesize
 \caption{Number of bits leaked (left) and probability of a correct guess (right) for different shifting schemes in simulated redactions of the NYT corpus set in 10pt font.
     }
 \label{tab:nyt10}
@@ -559,7 +532,7 @@ It is also unclear whether there exist a significant number of vulnerable redact
 
 We consider both \emph{nonexcising} and \emph{excising} redactions in this section.
 We chose to study redactions of names (e.g. first names, surnames, and country names) in this section because they are the most common, discussed further below, and because their release presents a privacy concern.
-We do not release any of these names and have taken steps to notify affected parties in order to ensure no individual will be adversely affected by the present analysis (Section~\ref{sec:redaction-ethics}}).
+We do not release any of these names and have taken steps to notify affected parties in order to ensure no individual will be adversely affected by the present analysis (Section~\ref{sec:redaction-ethics}).
 
 We evaluated the following document corpora: 
 
@@ -644,7 +617,7 @@ In our results, we label these redactions as \emph{Near Word}.
   \centering
 	\caption{Potentially vulnerable redactions and glyph shifting schemes identified in redacted corpora pages. The ``Evaluated'' row is filtered for the length of the redaction (approx. 1 to 2 words), semantic context (being a name), and scheme (Word).}
 \label{tab:wildres}
-\small\include{tab/wild-res}
+\small\include{wild-res}
 \end{table}
 
 
@@ -652,7 +625,7 @@ In our results, we label these redactions as \emph{Near Word}.
 \label{sec:wildres}
 The evaluation was able to find redacted information of significant public and historical relevance (not included).
 We begin by briefly discussing the non-excising redactions we located.
-We ran \maxray's location algorithm for nonexcising redactions on all of RECAP ($\approx10^{7}$ documents) and found \numRECAPNameredactions\ nonexcised redacted names in \numRECAPredactionDocs\ US court documents. 
+We ran Edact-Ray's location algorithm for nonexcising redactions on all of RECAP ($\approx10^{7}$ documents) and found \numRECAPNameredactions\ nonexcised redacted names in \numRECAPredactionDocs\ US court documents. 
 The number of total nonexcised redacted words was larger ($\approx$\num{1.4e5}).
 Of the redacted names, \numRECAPnadj\ had a independent glyph positioning scheme, \numRECAPocr\ used Adobe OCR, \numRECAPNearMSW\ were close to Word in $L_{1}$ distance, \numRECAPunk\ were not positioned using a scheme we modeled, and \numRECAPmsw\ exactly matched the Word positioning scheme.
 
@@ -675,18 +648,123 @@ Manual analysis of nonexcising RECAP redactions found 28.2\% of names were of a 
 Our own unmatched case rate (54.7\%) was lower than expected, and indicating matches were reported but the name was not in the dictionary in approximately 17\% of cases.
 
 \paragraph{Real-world Validation}
-Given the danger of false positives, deredaction should be understood as \emph{ruling out} possible candidate texts rather than determining the content of a redaction.
-We manually validated our results for excising redactions (where possible on 8 PDF documents) by performing web searches for further information on the redacted document.
+As was noted in Chapter~\ref{chap:emulation}, any guess and check performed for an unknown peice of information should be understood as \emph{ruling out} possible candidate texts rather than determining exact content.
+To serve as an oracle and ensure our methods were correct, we therefore also manually validated our results for excising redactions (where possible on 8 PDF documents) by performing web searches for further information on the redacted document.
 For example, in the case of an OIG investigation, we would perform a search related to the offense committed and organizations affiliated.
-In this process, we found several cases where \maxray's returned matching name set included the ground-truth name.
-We did not find any cases where a matching set was reported and \maxray\ did not return the correct name as one of the results, though these cases likely exist.
+In this process, we found several cases where Edact-Ray's returned matching name set included the ground-truth name.
+We did not find any cases where a matching set was reported and Edact-Ray did not return the correct name as one of the results, though these cases likely exist.
 
 Nonexcising redactions provide ground truth, and we also used these redactions to validate our techniques.
 For every nonexcised redacted name in RECAP present in our dictionary, we excised the name, i.e. we removed the redacted text but preserved non-redacted glyph shift information.
-In all cases, the set of candidate texts returned by \maxray\ included the ground truth redacted word.
+In all cases, the set of candidate texts returned by Edact-Ray included the ground truth redacted word.
 
-\section{The Privacy and Ethics of Forensics}
+\section{Broader Implications}
+
+With the conclusion of this discussion on simulation for the purposes of analyzing redactions, we may look towards the broader implications of this study on the topics of this dissertation.
+Although the subject of this dissertation is on the construction of effective emulations for use in security measurement, it also is pertinent to discuss, briefly, the ethical implications of this work.
+
+\paragraph{Ethical Implications}
 \label{sec:redaction-ethics}
 
+The application of effortful analysis to this subject demonstrated sub-pixel-sized glyph position shifts, imperceptible to the human eye, can break text redactions.
+There are at least 778 vulnerable excising redactions in FOIA, OIG, and DNSA PDF corpora and more than 700 publicly accessible court documents with nonexcising redactions.
+As a result, it is necessary to discuss the ethical implications of this work and potential defenses.
+
+The official NSA guidelines for redaction of Microsoft Word generated PDFs are to change the content of the original Word document so that information regarding the sensitive name is destroyed (i.e. by changing the name to the letter ``x'')~\cite{nsaRedact}.
+This is likely the only \emph{perfectly secure} manner by which to protect a redaction from information leaks.
+However, this can be an invasive process and is not always applicable to old documents for which the original files have been lost.
+Below, we describe five alternative defenses against excising redaction vulnerabilities, which help to make redaction leaks more difficult to exploit:
+\begin{enumerate}
+\item \textbf{Glyph Shift Discretization}
+Shifting scheme noise may be added to a line without affecting visual fidelity.
+Alternatively, each shift could be rounded to a discrete interval, e.g. 0.1~mm.
+If this noise is indistinguishable from legitimate glyph shift information, accounting for it would require an adversary to increase the set of accepted redacted text guesses.
+Removing shifting scheme information altogether can also lower information leaks, though this is less visually appealing.
+\item \textbf{Document Layout and Redaction Obfuscation}
+Modifying the PDF commands used to render the box of the redaction complicates the process of automated redaction location.
+For example, our excising redaction location algorithm relies on identifying a black box between two US English words in order to avoid large numbers of false positives.
+\item \textbf{Increasing Redaction Width} 
+Redacting additional adjacent words can make deredaction more difficult, although this practice may not always compatible with legal mandates.
+This defense increases the number of words the attacker must guess. 
+If the adjacent words are easy to infer, e.g., by a machine learning model, this is not a sufficient defense.
+\item \textbf{Adversarial Redactions} 
+One defense against deredaction is to change the document's text before it is redacted, for example, by replacing a sensitive name with the letter ``X''.
+It is also possible to \emph{lie} to deredaction by changing the redacted content to something seemingly valid, potentially misinforming an adversary.
+\item \textbf{Rasterization} 
+Rasterization appears to be an effective defense against deredaction.
+In many cases this defense is infeasible because it removes searchable text data from the document, however, performing OCR on the document post-redaction can act as a stopgap for this issue.
+Rasterization algorithms may also modify or ignore certain glyph shifts,\footnote{We analyzed several rasterization tools, finding several had imperfect precision.} requiring the analyst to perform more reverse engineering to identify the specific rasterization tool used.
+\end{enumerate}
+
+As it is common practice to rasterize documents, we performed an experiment to estimate the effects of rasterization on redaction security.
+We chose ten name occurrences from court documents using the Word shifting scheme in 12 point Times New Roman.
+For each selected text line, we substituted the name with each entry in our 235,560 name dictionary from our real-world evaluation, redacted the entry, and calculated the redaction's width.
+This resulted in 2,017 unique redaction widths, $\approx$11 bits of information leaked, on average.
+Quantization to 300 DPI (20 text space units) resulted in 252 widths on average ($\approx$8 bits) and quantization to 600 DPI performed slightly worse with a result of 377 widths ($\approx$8.6 bits).
+
+Unfortunately, this estimation is a lower bound.
+In general, when a character is rasterized, the vector representation is converted to a ``mosaic'' of pixel values.
+Whether a given pixel value is black, white, or in the case of anti-aliasing~\cite{romanyuk2015method}, some shade of gray, is dependent on how the graphical rendering specification is converted to a matrix of pixel values.
+An analysis of this possibility is beyond the scope of this dissertation.
+
+In addition to providing access to some of these defenses publicly, we carefully considered the balance between the benefits of public awareness and potential risks of misuse present in this research.
+To the best of our abilities we are attempting to maximize the benefits to society and minimize the harm to individuals in the publication of this work.
+All the documents studied are in the public domain.
+So long as copies of these PDFs exist, they pose a risk to individuals' privacy.
+During our evaluation, we ensured all deredaction was performed on an isolated and hardened server and that no identifying information exited this server.
+We deleted the documents from our server and associated data after evaluation and notifying affected parties.
+
+We have notified Microsoft and Adobe of our discoveries: they have acknowledged the attacks are possible, but to our knowledge have not yet made changes to their tools that could significantly help protect future PDF redactions.
+Our discussions with government officials indicate remediations will require both redaction \emph{process} and \emph{software} changes.
+We have also reached out to the PDF Association regarding the provision of guidance for redaction application implementers.
+We have also performed an extensive notification of the US Courts, the Free Law Project, the US Department of Justice, and 22 agencies affected by our study of documents from the Office of Inspector General.
+The US Courts, US Census, and CIGIE have been active in both understanding and remediating the problem.
+Notification has been given to sub-courts affected by nonexcising redaction vulnerabilities.
+Our discussions with these groups are ongoing and include technical support, code, and free consulting regarding remedation and prevention efforts.
+
+The discovered redaction vulnerabilities are not limited to US documents and affect any PDF document positioned using non-uniform font metrics (whether these are Word-internal metrics, TTF metrics, or otherwise).
+Due to the limitations on the author's knowledge of different languages, we were not able to effectively evaluate the security of documents internationally.
+We have indicated to US government officials that notification of the international community is advisable.
+
+\paragraph{Implications for Security Measurement}
+Our study of the simulation of glyph shifting schemes in this section point towards several critical limitations in the study of systems generally.
+First, the importance of limiting the existence of \emph{cartesian doubt} in the determination of information by ensuring that the dictionary selected as a basis for further deduction is sound.
+Second, this section clarified the possibility, in the case of some \emph{oracle} to determine whether a guess is correct and a reasonable search space, it is possible to attempt a universal quantification over the possible inputs of a simulation in order to find inputs that ``work''.
+In cases where the amount of information leaked by a system is large enough, this is sufficient to determine the missing component.
+Finally, the danger of ignoring hidden dependencies in information about a system: this is captured by the formal study of \emph{side-channels}~\cite{zhou2005side} in hardware and cryptography, but is not always applied evenly as a concept across different security-sensitive systems.
+To provide a concrete example, we will note prior work on redaction:
+
+The primary predecessor to our redacton work is Lopresti and Spitz~\cite{lopresti2004quantifying}, which presents a manual technique for matching glyphs to a redaction's width in a raster image of text.
+This attack is prone to human error, especially in light of the fact some glyph shifts are sub-pixel sized.
+The authors attempted to use natural language processing to predict redacted words, something our work found imprecise given current models.
+The Lopresti and Spitz work also conflates document glyph position specifications with TTF glyph widths and assumes both are equivalent to a raster document's character widths.
+This presents two problems:
+
+First, a rasterization workflow may change a document's glyph positioning and physical printing may not be a pixel-perfect reproduction of the digital document.
+While the accurate representation of documents is the whole \emph{point} of PDF, a few of our tests found glyph positioning operations were not always honored.
+Behavior and information from any \emph{singular} tool may or may or may not comply with the PDF standard, either because of software bugs or due to a lack of support for a specific glyph positioning operation.
+
+Second, TTF glyph widths do not necessarily equate with PDF document or raster glyph widths.
+TTF is only one of five types of fonts supported by PDF.
+The Lopresti and Spitz techniques also rely on (potentially inaccurate) human determination of glyph positions.
+Recall the present work provides a fully automatic deredaction method, a precise analysis of leaked information, and a clear measurement of this problem's prevalence in real documents.
+
+Whelan and Naccache~\cite{egyptian} also performed the first case study of width-based techniques for deredacting documents.
+They placed images of unredacted glyphs from a printed document into the space of a redacted country name in an Iraq War memo.
+While of historical importance, Whelan and Naccache's technique is manual and error-prone for large dictionaries.
+As shown by our evaluation, the width of a glyph is most often \emph{not} independent of its location on the page.
+
+While the above had some idea of how attacks on redactions may work, their analysis did not present a principled study of the encoding of redactions in documents or simulation of PDF document production.
+As a result, this prior work did not accurately measure the security of redactions, demonstrating how a lack of proper measurement and verification of common systems can lead to disaster.
+
 \section{Summary}
+
+In this chapter, we have presented a principled study of the security of redactions in PDF documents.
+We presented techniques and methods for creating simulations of complex software functions using time-travel debugging and manual analysis.
+In doing so, we also demonstrated a unique and impactful application of dictionary attacks in the domain of digital forensics.
+Insights from this work can be generalized to many scenarios where some information about the system under study is missing.
+Moreover, this was the first work to demonstrate effective attacks on a large number of excising redactions---redactions where character information is removed.
+Our empirical results show that the attacks are effective on a large number of documents, including those from the US government.
+This led us to notify more than 22 affected parties, including large government organizations, and release effective tools for the protection of redactions.
+Finally, we related this work to the primary subject of this thesis: redaction vulnerabilities present a case study demonstrating the importance of accurate simulation when evaluating a system's security.
 

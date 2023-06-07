@@ -1,0 +1,50 @@
+
+\begin{figure}
+    \centering
+%     \hfill
+% \begin{subfigure}[b]{0.49\textwidth}{}
+% \centering
+% \resizebox{1\width}{1\height}{%
+% \begin{tikzpicture}[xscale=0.65, every node/.style={scale=0.80}]
+%   \def\t{0.01}
+%     \node[above] at (3, 0.3)(integ0) {integral\_0};
+%     \node[above] at (6, 0.3)(deriv0) {derivative\_0};
+%     \node[above] at (9, 0.3)(integ1) {integral\_1};
+%     \node[above] at (12, 0.3)(deriv1) {derivative\_1};
+% 
+%   \draw[branch,thick] (integ0) to (3, 1);
+%   \draw[branch,thick] (6,1) -- (deriv0);
+%   \draw[branch,thick] (3,1) -- (6,1) node[midway,above] (plrprg0) {PID\_0};
+% 
+%   \draw[branch,thick] (integ1) to (9, 1);
+%   \draw[branch,thick] (12,1) -- (deriv1);
+%   \draw[branch,thick] (9,1) -- (12,1) node[midway,above] (plrprg1) {PID\_1};
+% 
+%   \draw[branch,thick] (plrprg0) to (4.5, 1.6);
+%   \draw[branch,thick] (10.5,1.6) -- (plrprg1);
+%   \draw[branch,thick] (4.5,1.6) -- (10.5,1.6) node[midway,above] (pidfixcycle) {plc\_prg};
+% \end{tikzpicture}
+% 	}
+% 	\label{fig:plc-abstr}
+% \end{subfigure}
+% \hfill
+% \begin{subfigure}[b]{0.49\textwidth}
+% \centering
+\begin{tabular}{ |l|ccc| } 
+ \hline
+  Function & \#Lifts & \#Symbols & \#LoA \\ [1ex] 
+ \hline
+ \hline
+  integral & 0 & 5 & 47 \\ [0.5ex] 
+  derivative & 0 & 10 & 24 \\ [0.5ex] 
+  pid & 8 & 9 & 302 \\ [0.5ex] 
+  main & 2 & 6 & 148 \\ [0.5ex] 
+ \hline
+\end{tabular}
+\label{fig:table-plc}
+% \end{subfigure}
+	\caption{Analytics for InteGreat's lifting of the PLC firmware's control logic. The integral and derivative functions contained no inner program slices. Each call to PID, integral, and derivative maintains separate state.}
+% \hfill
+	\label{fig:plc-stats}
+\end{figure}
+

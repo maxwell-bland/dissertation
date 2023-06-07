@@ -275,6 +275,9 @@ The callchain distance measures the distance from an instruction in one calling 
 To compute the callchain distance, Jetset first computes the local distance to the nearest \texttt{call} instruction that leads to the target.
 It then recursively sums the distance to each function call on the way to the target:
 
+% break page
+\newpage
+
 \begin{lstlisting}[language=python]
 # Calculate callchain distance
 while function != target_function:
@@ -370,7 +373,7 @@ We observed the same behavior on the physical hardware as in the emulator with s
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.9\linewidth]{fuzzing-output}
+\includegraphics[width=\linewidth]{fuzzing-output}
 \caption{A screenshot of the Jetset fuzzing framework (left) discovering a crash (right) in the CMU-900.}
 \label{fig:fuzzing-out}
 \end{figure}
