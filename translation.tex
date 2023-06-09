@@ -5,9 +5,8 @@ In the approaches to emulation-based measurements of system security we have con
 In real-world systems, components are often only partially accessible due to a mixture of closed-source code, limited physical accessibility, or intractable complexity.
 Traditionally, the extraction of clean mathematical models from systems, such as ordinary differential equations, is considered infeasible.
 Simultaneously, a significant amount of work has now been performed on the verification of models with black-box components, such as DryVR~\cite{fan2017dryvr}.
-Systems such as these treat the numerous parameters of a black-box component as a continuous trajectory.
-In this chapter, we will discover why this treatment of systems as black-box components, similar to the emulation-based approaches we have considered thus far, is not sufficient for the verification of systems.
-We will introduce the InteGreat system~\cite{bland2023integreat}, which adopt a lifting approach to verification that extracts high-level emulations of systems from binary firmware.
+In this chapter, we will discuss an alternative method of verifying complex, real-world systems which works by extracting key information from a given complex system's binary representation.
+We will introduce the InteGreat system~\cite{bland2023integreat}, which uses a combination of a logical rule specification framework, program slicing, and abstract interpretation to lift high-level emulations (continuous equation models which can be dropped into Matlab Simulink).
 In the latter sections of this chaper, we will demonstrate how this approach can be used to identify differences between implemented machine code and published mathematical specifications.
 
 \section{Introduction}
@@ -114,10 +113,10 @@ In most firmware programs, inputs and outputs are context-sensitive to its progr
 It is thus necessary for InteGreat to allow symbolic expressions as memory addresses via a $LOC$ function.
 
 InteGreat accomplishes this by implementing a symbolic memory model, extending Trt{\'\i}k et al.'s model~\cite{symbolic-memory}, under-constrained memory~\cite{Under-Constrained}, and incorporating the core ideas of Coppa et al.~\cite{coppa2017rethinking}.
-Leveraging the angr event hook infrastructure, InteGreat intercepts all program state modifications, and replaces them with InteGreat's symbolic memory model. 
-During each pointer dereference, the symbolic memory model is queried with the intercepted dynamic symbolic state of the symbolic executor.
+Leveraging the angr event hook infrastructure, InteGreat intercepts all program state modifications, and integrates them with effective address use tracing in order to identify \emph{aliasing}, which occurs when two symbolic pointers are used to reference the same location but their specific value is runtime dependent.
+With each pointer dereference, the symbolic memory model is queried with the intercepted dynamic symbolic state of the symbolic executor, which handles returning the correctly intended high-level variable value.
 
-We implement pointer reasoning by proving the equivalence of symbolic expressions for pointer values.
+Pointer reasoning is provided by the equivalence of symbolic expressions for pointer values.
 When resolving memory, we use timestamps associated with each memory operation and a strict equivalence check on the pointer expression to determine when a memory location is modified.
 For example, given two pointers $p_{1}$ and $p_{2}$, if $p_{1} = 50$ and $p_{2} = 50$ at runtime and we are checking $read(p_{1}) = write(p_{2})$, we will return that they are NOT the same memory location. 
 That is, we do not assume runtime knowledge. 
@@ -275,3 +274,10 @@ The PLC had significantly fewer binds as it did not rely on a software floating 
 \input{plc}
 
 \section{Summary}
+
+The work presented in this chapter empirically demonstrates that traditional top-down approaches to verification can underestimate the complexity of firmware implementations.
+Instead of \emph{only} working from mathematical models of a specific implemented system, we propose the additional application of careful, logic-based function extraction.
+From this point of view, it is possible to define the system at arbitrary levels of granularity while ensuring that the provided representation for verification is accurate to the system under study.
+For this purpose, we developed a system that applies logic-based function extraction to recover continuous equations from symbol-stripped binary firmware.
+Through the analysis of two real world systems, a quad-copter and PLC, we were able to demonstrate such an approach's ability to find differences between published, high-level representations and low-level system representations.
+We were also able to elucidate otherwise unknowable features of a system under study, such as physical ADCs and the effects of their value representation on the system's dynamics.

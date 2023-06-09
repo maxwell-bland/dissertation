@@ -447,8 +447,36 @@ This was complicated by the fact the CMU-900 executed a significant portion of i
 It was therefore necessary to relocate the portions of code that were to be instrumented into unused, writable RAM memory, and update associated pointers.
 This was a two stage process, first consisting of corrupting the interrupt vector table in order analyze portions of the code that were in use at runtime for critical functions and relevant to exploitation, and second, updating non-relative memory addressing data to point to the relocated code segments.
 
+\begin{figure}
+\begin{lstlisting}[language=C]
+/* eax stores the original offset in the code. we read from this offset to get the relative offset the call lands at. We then change that offset so it is relative to the location of the trampoline call instruction. We then set it into the trampoline call instruction. */
+"mov    $" TRAMPOLINE_LOC ",%ebx\n"
+"add    $3,%eax\n"
+"mov    %eax,1(%ebx)\n"
+"sub    $3,%eax\n"
+"mov    %eax,%ebx\n"
+"add    $0x" RELOCATE_ACARS_CODE_BASE "00120,%eax\n"
+"mov    (%eax),%eax\n"
+"shl    $0x8,%eax\n"
+"sar    $0x8,%eax\n"
+/* Add three bytes to account for the three storage bytes */
+"add    $0x3,%ebx\n"
+/* Add relative base of call so it is relative to seg base */
+"add    %ebx,%eax\n"
+"sub    $" TRAMPOLINE_LOC_OFF ",%eax\n"
+/* Subtract 10 bytes relative to the tramp call return  */
+"sub    $0xA,%eax\n"
+/* Write the jmp instruction of the trampoline loc */
+"mov    $" TRAMPOLINE_LOC ",%ebx\n"
+"mov    %eax,6(%ebx)\n"
+\end{lstlisting}
+\caption{Code for live binary rewriting of call instruction in the CMU-900 firmware.}
+\label{fig:dynanal-code-cmu}
+\end{figure}
+
 However, once the appropriate relocation operations were complete, it was possible to inject additional shim code at arbitrary locations in system memore using binary rewriting tactics.
-The primary rewriting tactic used was the augmentation of x86 call locations, and is detailed in Section~\ref{sec:dynanal} of this dissertation.
+The primary rewriting tactic used was the augmentation of x86 call locations.
+The precise method used is detailed in Section~\ref{sec:dynanal} of this dissertation, and code is given in Figure~\ref{fig:dynanal-code-cmu}
 With shim instrumentation in place, it was trivial to manually identify potentially crashing inputs by examining data flows within the system.
 
 \section{Open Challenges in Rehosting} 
@@ -473,6 +501,6 @@ While this information is of less general application, it still plays a critical
 \section{Summary}
 
 In this chapter, we discussed one approach to the emulation of complex systems, targeted firmware rehosting.
-The benefit of this approach is its ability to synthesize peripheral hardware devices for the analysis of real-world embedded systemss.
+The benefit of this approach is its ability to synthesize peripheral hardware devices for the analysis of real-world embedded systems.
 Particularly, it considers the available information about the system to derive models of unknown components.
 In the next chapter, we will develop an alternative approach which addresses some of the shortcomings of looking at a strict derivation from available information for resolving unknown components: universal quantification over possible missing information, and see how this approach applies to the security of real-world redactions.
