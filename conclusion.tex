@@ -2,8 +2,8 @@
 \label{chap:conclusion}
 
 Analysis of complex systems with limited ground-truth information is difficult but critical.
-Existing approaches proceed either from the minutia of a system's microarchitectural semantics or a broad set of general properties which are not always applicable to a system's implementation specifics and attempt to meet the other side in the middle.
-However, we are still facing profound challenges in explicating the problems involved in the verification of systems, and often place them under the notion of undecidability.
+Existing approaches proceed either from the minutia of a system's micro-architectural semantics or a broad set of general properties which are not always applicable to a system's implementation specifics and attempt to meet the other side in the middle.
+However, we are still facing profound challenges in explicating the problems involved in the verification of systems, and often claim analysis of these systems is infeasible.
 
 In this dissertation, we examined the practice of emulation and simulation of systems, and developed three novel applications of emulation to systems security measurement.
 Our first analysis considered the problem of modeling hardware from the domain of firmware.
@@ -13,12 +13,12 @@ All of these techniques identified new information or perspectives on the system
 Emulation always provides uncertain bounds on the true behavior of the system modeled, defined by the method in which the system is emulated.
 Each of our different approaches each eventually converged to some bound on the knowable, and we identified how this bound plays a role when considering the correctness of deductions made from the model.
 Such considerations can be understood in two ways.
-In reference to missing subcomponents, e.g. redacted content and missing peripherals, the unknown can be used to bound our willingness to consider a system secure: referring to the absolute rather than simple opacity, what cannot be effectively disambiguated to a necessary degree is meaningless to an adversary, and that which can be known is insecure.
-In the development of emulations, this bound informed the construction of a representation for the system's behavior, and directed us towards completion in our analysis of what can be observed, i.e. the shifting schemes underlying text layout and the representations used for reasoning about systems.
+In reference to missing sub-components, e.g. redacted content and missing peripherals, the unknown can be used to bound our willingness to consider a system secure: referring to the absolute rather than simple opacity, what cannot be effectively disambiguated to a necessary degree is meaningless to an adversary, and that which can be known is insecure.
+In the development of emulations, this absolute bound directed us towards completion in our analysis of what can be observed, i.e. the shifting schemes underlying text layout and the representations used for reasoning about systems.
 
 We introduced different strategies to model the dynamics of diverse complex systems where ground-truth information was limited or unavailable.
 In Chapter~\ref{chap:rehost}, we used taint-tracking based symbolic execution, fuzzing, and live binary rewriting to find exploits for a critical avionics component.
-Because these techniques work at the level of microarchitectural semantics, we were able to generalize each of these principles to the measurement of security of many embedded systems.
+Because these techniques work at the level of micro-architectural semantics, we were able to generalize each of these principles to the measurement of security of many embedded systems.
 Our findings ultimately led to the deeper understanding that new strategies were needed for reasoning about complex relationships within known firmware information and identifying unknown external components.
 In Chapter~\ref{chap:info}, we approached the latter of these challenges by reviving a decades-old information theoretic approach to the unknown: dictionary attacks, and effectively applied this technique to achieve groundbreaking results that rendered hundreds of redactions in historically relevant documents ineffective.
 The tool we built for this purpose, Edact-Ray, adapted the careful analysis of binary code introduced by Jetset in the previous chapter to the generation of precise simulations of PDF production, allowing us to use the information in the PDF documents as an ``oracle'' to eliminate bad guesses for redacted content.
@@ -26,20 +26,20 @@ In Chapter~\ref{chap:integreat}, we approached the problem of function extractio
 We were able to use this system to identify differences between published mathematical models and their implemented versions, as well as recover control equations for a PLC used in a chemical plant, then perform more precise analysis and attack modeling against these equations than was present in original publications on the system.
 
 Each of these techniques provided impactful analysis of otherwise opaque software and embedded systems, in part due to the specific efforts involved in developing the tools used.
-They present a clear line of development in approaching the problem of security measurement in critical systems with specific applications and areas of focus, and each of these areas could be further explored to identify new explots.
+They present a clear line of development in approaching the problem of security measurement in critical systems with specific applications and areas of focus, and each of these areas could be further explored to identify new exploits.
 There are also many additional challenges remaining in the field of emulation construction.
 We provide an overview of potential areas for future work:
 
 \paragraph{Multi-System Interaction Emulation and Simulation Extraction}
-An immediate challenge to our analysis of PDF document production schemes in Chapter~\ref{chap:info} was the possiblity of modeling and tracking information as it flowed through multiple different software stacks.
-For example, a PDF produced by Microsoft Word can then be fed to Apple's email client, where it is then opened in firefox and printed as a PDF using the system dialog.
-Exactly identifying the operations that are performed on the PDF's specification in each of these steps requires recording each step's execution individually, reverse engineering each software stack individually, or instrumenting the operating system to track how the information of interest in propogated between these systems.
+An immediate challenge to our analysis of PDF document production schemes in Chapter~\ref{chap:info} was the possibility of modeling and tracking information as it flowed through multiple different software stacks.
+For example, a PDF produced by Microsoft Word can then be fed to Apple's email client, where it is then opened in Firefox and printed as a PDF using the system dialog.
+Exactly identifying the operations that are performed on the PDF's specification in each of these steps requires recording each step's execution individually, reverse engineering each software stack individually, or instrumenting the operating system to track how the information of interest in propagated between these systems.
 One avenue for future work is to instrument a system like QEMU, or the operating system itself, so that precise extraction of models of operations performed on data can be extracted and reused in simulations for the purposes of, for example, the measurement of redaction security.
 
 \paragraph{Type Checking for Program Analysis and Emulation}
 The representations used to emulate, represent, and verify the behavior of systems are usually partial due to the complexity of reproducing and precisely understanding the system under test.
 InteGreat's approach to function extraction introduced a verifiable representation of semantic modeling: we can represent the relationships and translations between symbols logically.
-This effectively provides a form of type system for the interpetation of the analyzed system.
+This effectively provides a form of type system for the interpretation of the analyzed system.
 It would be ideal to extend this type system with analyses built from a description of a system to ensure symbolic translations accurately represent the concrete system and do not remove or fail to account for critical components that could affect the correctness of further analysis, e.g. program analysis built on top of QEMU can simply ignore some TCG helper routines which are used by the analyzed binary and the type checker would enforce that these are supported.
 This could also help to ensure the authenticity of academic research in the subject of security.
 
@@ -48,5 +48,5 @@ Use of the Jetset system in Chapter~\ref{chap:rehost} was severely limited by th
 The simplest and most effective solution to this problem and many of the challenges encountered by this dissertation is the effective cataloging, representation, and sharing of semantic knowledge regarding the function of systems.
 For example, when performing symbolic execution on a function, the chances are that the same function or one quite similar to it has been previously symbolically executed by some individual analyzing some system at some point in time.
 Therefore, it would be valuable to accumulate a database of both system functions and associated strategies for their interpretation, which could be queried by analysis routines like abstract interpretation.
-Moreover, this could provide predicates for pattern matching that would be able to quickly determine whether a given subfunction of a new system was secure or insecure based upon the history of that function's use.
+Moreover, this could provide predicates for pattern matching that would be able to quickly determine whether a given sub-function of a new system was secure or insecure based upon the history of that function's use.
 In each case, the specific representation of the information may vary, but there are a range of existing security analyses are uniform enough in behavior, such as fuzzing, that the development of such a catalogs is possible and in some cases already underway.

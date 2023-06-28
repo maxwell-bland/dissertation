@@ -12,7 +12,7 @@
 ]
 
 % Containers
-\node (root) [container] {RAM Filesystem};
+\node (root) [container] {RAM File-system};
 
 % CRIU snapshots
 \node (snapshot1) [snapshot, left of=root, xshift=-2cm] {CRIU Snapshot};
@@ -92,8 +92,8 @@ This chapter will also discuss other exploits developed using this emulator anal
 
 Due to the complex nature of firmware and the heterogeneity of the hardware it interacts with, security testing and analysis of firmware is a difficult problem~\cite{muench2018you, wright2021challenges}.
 Different techniques to test and analyze firmware vary both in their goal (e.g., finding bugs, full rehosting, or partial rehosting), as well as the assumptions that they make about the firmware they analyze.
-For example, a testing technique may only analyze firmware using a particular operating system~\cite{firmadyne}, or may assume that auxillary information about the firmware is available (e.g., firmware-hardware I/O traces~\cite{pretender2019}) to improve results.
-The use case of Jetset\textemdash partial rehosting using only the firmware itself and no auxillary information\textemdash is most similar to other rehosting techniques, however, for completeness, we outline other approaches to analyzing firmware below.
+For example, a testing technique may only analyze firmware using a particular operating system~\cite{firmadyne}, or may assume that auxiliary information about the firmware is available (e.g., firmware-hardware I/O traces~\cite{pretender2019}) to improve results.
+The use case of Jetset\textemdash partial rehosting using only the firmware itself and no auxiliary information\textemdash is most similar to other rehosting techniques, however, for completeness, we outline other approaches to analyzing firmware below.
 
 \paragraph{Firmware testing and analysis}
 Approaches have been developed to test firmware without attempting to create a stand-alone emulator for the hardware.
@@ -126,7 +126,7 @@ Other tools
 This technique provides the highest fidelity emulation since the emulator directly interacts with the physical hardware; however, use of this technique is contingent on continuous access to the hardware, which is not always possible since hardware (like that used in avionics) may be difficult or impossible to obtain.
 
 \paragraph{Full firmware rehosting} 
-Full rehosting is a technique which attempts to construct a fully featured, high-fidelity emulator from a piece of firmware and auxillary information about the SoC or firmware.
+Full rehosting is a technique which attempts to construct a fully featured, high-fidelity emulator from a piece of firmware and auxiliary information about the SoC or firmware.
 
 Firmadyne~\cite{firmadyne} is a platform for automated dynamic analysis of Linux-based embedded systems.
 Firmadyne takes as input a piece of firmware running the Linux kernel, and executes user-space code for the firmware, emulating the common Linux peripherals.
@@ -142,12 +142,12 @@ HALucinator~\cite{clementshalucinator} is a firmware rehosting tool that uses hu
 HALucinator takes as input firmware, and the HAL the firmware uses, and produces a fully featured emulation environment for the firmware.
 
 
-Previous rehosting techniques have relied on auxillary information to infer the behavior of the hardware environment.
-While this results in a more complete emulator, this auxillary information is not always available\textemdash most of our evaluation subjects had none.
+Previous rehosting techniques have relied on auxiliary information to infer the behavior of the hardware environment.
+While this results in a more complete emulator, this auxiliary information is not always available\textemdash most of our evaluation subjects had none.
 Furthermore, security analysis is often concerned with only a particular software component of the firmware, (e.g., the network traffic or the file system code) and may not need a fully featured emulator.
 
 \paragraph{Partial rehosting}
-Partial rehosting, as opposed to full rehosting, attempts to create an emulator from the firmware only, with no auxillary information about the peripherals.
+Partial rehosting, as opposed to full rehosting, attempts to create an emulator from the firmware only, with no auxiliary information about the peripherals.
 However, the emulators produced by partial rehosting are not complete\textemdash they are not guaranteed to implement all peripherals for the firmware, only what they can infer.
 This is the point in the design space that Jetset occupies.
 There is one other notable system that implements partial rehosting, P\textsuperscript{2}IM.
@@ -157,7 +157,7 @@ It takes as input the target firmware and its memory map, and fuzzes the firmwar
 It then analyzes the device access patterns exercised during this fuzzing pass to infer details about the memory-mapped IO interactions between the firmware and peripheral devices, and executes the firmware without crashing.
 
 There are two key differences between P\textsuperscript{2}IM's fuzzing-based approach, and Jetset's directed symbolic execution-based approach.
-The first deifference is that unlike P\textsuperscript{2}IM, Jetset is \textit{targeted}\textemdash it is designed to ignore most paths through the firmware to focus on a particular target piece of code, which allows it boot deep into large pieces of firmware.
+The first difference is that unlike P\textsuperscript{2}IM, Jetset is \textit{targeted}\textemdash it is designed to ignore most paths through the firmware to focus on a particular target piece of code, which allows it boot deep into large pieces of firmware.
 While Feng et al. showed P\textsuperscript{2}IM's approach is effective at fuzzing peripheral handling code and emulating microcontroller code, it is not clear whether it scales to larger firmware.
 Besides evaluating against all of P\textsuperscript{2}IM's publicly available real-world evaluation subjects, we also evaluated Jetset against four complex pieces of firmware\textemdash one of our evaluation subjects, the Raspberry Pi 2 is 450x LoC of any of P\textsuperscript{2}IM's evaluation subjects.
 We attempted to evaluate P\textsuperscript{2}IM on our 4 real-world firmware samples. Unfortunately, the current version of P\textsuperscript{2}IM only supports Cortex-M MCUs and we were unable to run it on any of our samples, including our Cortex-A7 and Cortex-A8 firmware.
@@ -177,9 +177,9 @@ To do this, Jetset requires the following information about the target embedded 
 \begin{itemize}[noitemsep, leftmargin=12pt]
 \item The \emph{executable code} of the target, usually read out of program flash or extracted from a firmware update provided by a manufacturer.
 \item The \emph{memory layout} of the target, specifying which regions of the address space are mapped to program memory, RAM, and device I/O registers.
-This information can be obtained from the datasheet of a single-chip system or from a basic analysis of the executable code. Note that Jetset does \emph{not} need to know which devices are mapped where, only the address range used for memory-mapped I/O.
+This information can be obtained from the data-sheet of a single-chip system or from a basic analysis of the executable code. Note that Jetset does \emph{not} need to know which devices are mapped where, only the address range used for memory-mapped I/O.
 \item The \emph{entry point address} where execution begins.
-This is often specified in the CPU datasheet.
+This is often specified in the CPU data-sheet.
 \item The program \emph{goal address} that the analyst wants the program to reach.
 For example, this can be the address of a print instruction that reports a successful system boot.
 \end{itemize}
@@ -209,7 +209,7 @@ If the main execution thread happens to be waiting for an ISR to update a variab
 Once Jetset has reached the target (with or without interrupts), it can create a synthetic peripheral model that can be used in QEMU.
 The result of the inference stage is a set of constraints on values read from peripherals needed for the firmware to boot.
 Jetset then uses Z3~\cite{zthree}, the default SMT solver used by angr, to find concrete values satisfying these constraints, capturing in the firmware's expected response to device reads during execution.
-This allows Jetsetto construct a light-weight, concrete device model, rendering peripheral modeling a one-time cost per device.
+This allows Jetset to construct a light-weight, concrete device model, rendering peripheral modeling a one-time cost per device.
 
 This synthesis stage generates an I/O trace model that is sufficient to reach the goal in the emulator.
 The synthesized trace is partitioned by I/O address, so there is a separate trace for each memory-mapped I/O address.
@@ -250,7 +250,7 @@ Jetset uses a context-sensitive distance function: it determines the distance be
 To compute this distance function, Jetset first precomputes local distances for all functions.
 Then, Jetset computes the distances between instructions in different functions.
 To do this, Jetset takes advantage of the fact that all paths between instructions can be broken up into a sequence of returns, followed by a sequence of calls~\cite{directedsymex} (there will never be an interleaved call and return, because then that would be a local distance!).
-Nonlocal distances can therefore be seperated into two distances: the \textit{callstack distance}\textemdash the distance along the sequence of returns up the callstack\textemdash and the \textit{callchain distance}\textemdash the distance along the sequence of calls that lead to the goal address (or the goal address in a specific calling context).
+Nonlocal distances can therefore be separated into two distances: the \textit{callstack distance}\textemdash the distance along the sequence of returns up the callstack\textemdash and the \textit{callchain distance}\textemdash the distance along the sequence of calls that lead to the goal address (or the goal address in a specific calling context).
 
 Jetset precomputes all local distances, but both the callstack and callchain distances are computed lazily from the actual stack during execution (it is infeasible to precompute all callstack and callchain distances).
 Jetset computes the total context-sensitive distance as the sum of the callstack and callchain distances.
@@ -291,7 +291,7 @@ Suppose again  that Jetset wanted to reach statement 7 (in the second \texttt{fo
 The call chain distance would be 5: 3 to reach the second \texttt{foo} call and 2 to descend into the \texttt{foo} call to reach statement 7.
 
 \paragraph{Search Exceptions}
-However, there are many cases where due to incomplete semantic modeling and software control flow complexity, jetset is not able to identify a correct path to the current goal address using the context-sensitive CFG.
+However, there are many cases where due to incomplete semantic modeling and software control flow complexity, Jetset is not able to identify a correct path to the current goal address using the context-sensitive CFG.
 For example, to cope with loops where taking the shortest path will lead to a hanging state, we \emph{alternate} decisions, to avoid taking the same branch twice where unnecessary.
 For these cases, Jetset relies on using the local distance to the nearest return as a fallback distance function.
 The incremental CFG generation improves the quality of the CFG over time, so eventually the CFG will contain a path to the target.
@@ -317,7 +317,7 @@ The core targets for this evaluation were a Raspberry Pi 2, a single-board compu
 The statistics on the emulation of these systems are given in Table~\ref{tab:targets}.
 
 Details on the emulated and symbolically executed versions of the execution are given by the top and bottom portions of the table. 
-Differences, in generally, are explanable due to the backtracking of symbolic execution when it hits an infinite loop (in these cases Jetset must re-execute code and take a different path), and due to slower inference-stage execution.
+Differences, in generally, are explainable due to the backtracking of symbolic execution when it hits an infinite loop (in these cases Jetset must re-execute code and take a different path), and due to slower inference-stage execution.
 In the case of the Raspberry Pi, this led to an SD host controller command timeout, resulting in an error message and a register dump. 
 During emulated execution with synthetic devices, the SD host controller initializes without a command timeout, thus, the executed blocks counts differ; however, the resulting emulation is resilient. 
 
@@ -330,21 +330,21 @@ Five of these systems used Arduino as their operating system, one used the RIOT 
 \subsection{Full Hardware System Emulation Fuzzing}
 
 The useful application of the emulations generated by Jetset required both the development of systems for \emph{fuzzing} and \emph{live binary rewriting} (in the case of the CMU.
-For this purpose, we reduced the requirment firmware modification imposed by the FirmAFL~\cite{zheng2019firm} QEMU-AFL combined fuzzer.
+For this purpose, we reduced the requirement firmware modification imposed by the FirmAFL~\cite{zheng2019firm} QEMU-AFL combined fuzzer.
 A simplified depiction of our final architecture is given in Fig.~\ref{fig:fuzzing}.
 
 We isolated each fuzzer instance into an system-resource isolated Docker~\cite{docker2020docker} container, and then shared a file system folder between these instances.
 Docker was used to maintain isolation in the process tree and shared locks / backing files used by the QEMU emulation of the target systems.
-Within each fuzzer instance, file system folders were instantated to maintain the initial state of the emulated system, including backing files for flash memory and other peripheral devices, and an installation of QEMU and AFL with either a ground-truth implementation of the system emulation or a Jetset-generated emulation.
+Within each fuzzer instance, file system folders were instantiated to maintain the initial state of the emulated system, including backing files for flash memory and other peripheral devices, and an installation of QEMU and AFL with either a ground-truth implementation of the system emulation or a Jetset-generated emulation.
 For speed, these backing files were mounted into a RAM filesystem, rather than disk, and each container was pinned to one of 32 CPUs.
 In order to provide the initial state for QEMU, a Checkpoint-and-Restore in Userspace (CRIU) snapshot was used~\cite{venkatesh2019fast}.
 Inside each container, the QEMU instance was run, reading inputs from AFL and writing outputs to the shared folder.
 QEMU was instrumented with hooks which would introspect the guest system for crashes or hangs and then signal to the host AFL instance within the container to reset the entire QEMU process tree from a snapshot.
-Because the process tree was reset rather than a single process, peripheral models and coprocessors running in separate child processes would also be reset, simplifying the maintenance of state.
+Because the process tree was reset rather than a single process, peripheral models and co-processors running in separate child processes would also be reset, simplifying the maintenance of state.
 
 The two targets of our dynamic analysis using this fuzzing framework were the Raspberry Pi and the CMU-900.
 Both fuzzing sessions targeted the OS system call boundaries of Linux and VRTX, respectively.
-While no novel vulnerabilities were found in Linux, all recovered fuzzing outputs were equivalent between the emulateed and physical versions of the Raspberry Pi.
+While no novel vulnerabilities were found in Linux, all recovered fuzzing outputs were equivalent between the emulated and physical versions of the Raspberry Pi.
 The CMU-900, however, had significantly more successful results.
 The AFL fuzzer found 2963 unique code paths during 200 hours of fuzzing, over 200 of which resulted in meaningful crashes.
 One of these code paths, crashing on a function return, was bootstrapped into a privilege escalation vulnerability using a ROP chain by the author.
@@ -433,7 +433,7 @@ The emulated copies of the CMU-900 allowed us to attempt numerous instrumentatio
 \paragraph{Bootloader and OS Initialization Replication}
 Once our malicious software is loaded into the CMU-900 using the dataloader, control is effectively transferred entirely to the malicious code as a bootloader, negating any prior operating system and hardware device initialization.
 It was thus necessary to replicate the bootloader and operating system initialization process in the emulator to ensure that the malicious code would be able to run in the same environment as it would on the physical device.
-So, in this initial case, the malicious code would first relocate itself to an unused portion of RAM, transfer control to this new location, replicate the bootloader and initialization behavior necessary to reset the system back to an appropriate initial state, and then return control to to the orginal VRTX operating system.
+So, in this initial case, the malicious code would first relocate itself to an unused portion of RAM, transfer control to this new location, replicate the bootloader and initialization behavior necessary to reset the system back to an appropriate initial state, and then return control to to the original VRTX operating system.
 
 Developing this replicated functionality required significant manual extraction and analysis of code using Ghidra.
 The complexity of dealing with self-relocating code and the specific magic numbers involved for resource initialization led this ``poisoned'' version of the VRTX boot sequence required hundreds of lines of hand-written x86 assembly.
@@ -474,7 +474,7 @@ This was a two stage process, first consisting of corrupting the interrupt vecto
 \label{fig:dynanal-code-cmu}
 \end{figure}
 
-However, once the appropriate relocation operations were complete, it was possible to inject additional shim code at arbitrary locations in system memore using binary rewriting tactics.
+However, once the appropriate relocation operations were complete, it was possible to inject additional shim code at arbitrary locations in system memory using binary rewriting tactics.
 The primary rewriting tactic used was the augmentation of x86 call locations.
 The precise method used is detailed in Section~\ref{sec:dynanal} of this dissertation, and code is given in Figure~\ref{fig:dynanal-code-cmu}
 With shim instrumentation in place, it was trivial to manually identify potentially crashing inputs by examining data flows within the system.

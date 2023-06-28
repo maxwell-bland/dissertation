@@ -10,10 +10,10 @@
 % systems. Finally, we extend the method to compute reachtubes for hybrid
 % systems.
 
-In this chapter, we explore the application of sysem simulation for the purposes of digital forensics, particularly in the analysis of PDF documents.
+In this chapter, we explore the application of system simulation for the purposes of digital forensics, particularly in the analysis of PDF documents.
 We begin by introducing facets of the PDF format and redaction software that are relevant to the analysis of redacted documents.
 Then we move on to discuss the extraction of models of PDF producing software, and the use of universally quantified inputs in determining the text that is removed during redaction.
-We then introduce the most impactful discovery covered in this dissertation: the fact one to two word \emph{exising} redactions, where the text is removed from the page, do not actually work.
+We then introduce the most impactful discovery covered in this dissertation: the fact one to two word \emph{excising} redactions, where the text is removed from the page, do not actually work.
 Finally, although it is not immediately related to emulation, we see it necessary to discuss the ethical implications of these findings as they present a significant threat to individual privacy.
 
 \section{Introduction}
@@ -26,8 +26,8 @@ However, with the move to digital, paperless representations of documents, the p
 The process of removing information from digital documents is error-prone, as demonstrated by several high-profile examples~\cite{embarassingRedact}.
 However, while past work has considered the possibility of supplying all inputs to a system in a \emph{brute-force} attack, no existing work has considered the role the PDF file representation plays in redaction security, and redaction's vulnerability to such guess and check attacks.
 
-In this chapter, we begin by noting that the width of the characters in a proportional-width font can leak information about redacted text, and extend this notion of leaked information to the PDF file's representation of sub-pixel-sized chatracter positioning shifts.
-These shifts can be used to decude far more information about redacted text than width alone, and failing to understand these shifts exist leads to incorrect or imprecise deredaction, serving as a useful parable for the more general field of modeling systems.
+In this chapter, we begin by noting that the width of the characters in a proportional-width font can leak information about redacted text, and extend this notion of leaked information to the PDF file's representation of sub-pixel-sized character positioning shifts.
+These shifts can be used to decide far more information about redacted text than width alone, and failing to understand these shifts exist leads to incorrect or imprecise deredaction, serving as a useful parable for the more general field of modeling systems.
 
 We were the first to identify this problem of sub-pixel shift information, leading us to measure the severity of information leaks in PDF text redactions.
 We discovered methods for breaking redactions occurring on documents processed by optical character recognition (OCR) software and find that \emph{rasterizing} a document (converting the PDF to an image) increases the security of redactions but does not remove information leaks.
@@ -230,7 +230,7 @@ Word corrects for this small error between the two formats through use of glyph 
 Surprisingly, these modifications are done independent of the user's screen resolution.
 
 We note the internal widths used on line 3 of Figure~\ref{fig:msword-snippet} are determined by a loop with no overflow reset and the redacted information held by the accumulator \emph{is not zero} after a single shift is written.
-We refer the reader intereseted in the specific details of this algorithm to our original paper~\cite{bland2023story}.
+We refer the reader interested in the specific details of this algorithm to our original paper~\cite{bland2023story}.
 
 Word's shifting scheme depends on the document's edit history. 
 Changing a character inside of a Microsoft Word document splits the internal representation of the text fragment containing the character into two fragments. 
@@ -267,13 +267,13 @@ With respect to false positives and false negatives, our algorithm is equivalent
 \section{Modeling and Simulating Glyph Shifting}
 
 For a given PDF generation and glyph positioning workflow, it is possible to construct a precise simulation or model of the workflow's operation and layout of glyphs.
-In this chapter, the process was peformed using WinDBG's data flow analysis~\cite{timetravel} and a series of carefully crafted scripts for extracting information on how glyph positions are decided.
+In this chapter, the process was performed using WinDBG's data flow analysis~\cite{timetravel} and a series of carefully crafted scripts for extracting information on how glyph positions are decided.
 
 \paragraph{Extraction of System Simulations}
 To extract simulations of glyph shifting schemes for Microsoft Word, Adobe Acrobat, and other systems, we began by recording an execution trace of the production of a PDF document.
-In this document, we included easily identifiable text fragments, such as ``Lorem ipsum'' and ``redacted'', which excercised the glyph shifting scheme.
+In this document, we included easily identifiable text fragments, such as ``Lorem ipsum'' and ``redacted'', which exercised the glyph shifting scheme.
 Because a given software workflow can split its operations across multiple threads, we performed this recording in a virtual machine emulation running on a single core.
-Then, we scripted WinDBG to identify the last use of a \texttt{rep movs} operation with a pointer to the indentifiable string.
+Then, we scripted WinDBG to identify the last use of a \texttt{rep movs} operation with a pointer to the identifiable string.
 
 \lstdefinelanguage{JavaScript}{
   keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
@@ -524,7 +524,7 @@ In practice, an attacker can use a smaller dictionary (e.g. company employees).
 
 \paragraph{Real-world Evaluation.}
 
-With our synthetic evaluation done, it became immediately apparent that understanding the applicability of our simulations to real documents was critcial.
+With our synthetic evaluation done, it became immediately apparent that understanding the applicability of our simulations to real documents was critical.
 The generality of the results not immediately clear because glyph shifts may be modified by a variety of software workflows.\footnote{
     For example, by opening the PDF produced by word \emph{and then} modifying it using Adobe Acrobat. 
 }
@@ -648,7 +648,7 @@ Manual analysis of nonexcising RECAP redactions found 28.2\% of names were of a 
 Our own unmatched case rate (54.7\%) was lower than expected, and indicating matches were reported but the name was not in the dictionary in approximately 17\% of cases.
 
 \paragraph{Real-world Validation}
-As was noted in Chapter~\ref{chap:emulation}, any guess and check performed for an unknown peice of information should be understood as \emph{ruling out} possible candidate texts rather than determining exact content.
+As was noted in Chapter~\ref{chap:emulation}, any guess and check performed for an unknown piece of information should be understood as \emph{ruling out} possible candidate texts rather than determining exact content.
 To serve as an oracle and ensure our methods were correct, we therefore also manually validated our results for excising redactions (where possible on 8 PDF documents) by performing web searches for further information on the redacted document.
 For example, in the case of an OIG investigation, we would perform a search related to the offense committed and organizations affiliated.
 In this process, we found several cases where Edact-Ray's returned matching name set included the ground-truth name.
@@ -720,7 +720,7 @@ We have also reached out to the PDF Association regarding the provision of guida
 We have also performed an extensive notification of the US Courts, the Free Law Project, the US Department of Justice, and 22 agencies affected by our study of documents from the Office of Inspector General.
 The US Courts, US Census, and CIGIE have been active in both understanding and remediating the problem.
 Notification has been given to sub-courts affected by nonexcising redaction vulnerabilities.
-Our discussions with these groups are ongoing and include technical support, code, and free consulting regarding remedation and prevention efforts.
+Our discussions with these groups are ongoing and include technical support, code, and free consulting regarding remediation and prevention efforts.
 
 The discovered redaction vulnerabilities are not limited to US documents and affect any PDF document positioned using non-uniform font metrics (whether these are Word-internal metrics, TTF metrics, or otherwise).
 Due to the limitations on the author's knowledge of different languages, we were not able to effectively evaluate the security of documents internationally.
@@ -728,7 +728,7 @@ We have indicated to US government officials that notification of the internatio
 
 \paragraph{Implications for Security Measurement}
 Our study of the simulation of glyph shifting schemes in this section point towards several critical limitations in the study of systems generally.
-First, the importance of limiting the existence of \emph{cartesian doubt} in the determination of information by ensuring that the dictionary selected as a basis for further deduction is sound.
+First, the importance of limiting the existence of \emph{Cartesian doubt} in the determination of information by ensuring that the dictionary selected as a basis for further deduction is sound.
 Second, this section clarified the possibility, in the case of some \emph{oracle} to determine whether a guess is correct and a reasonable search space, it is possible to attempt a universal quantification over the possible inputs of a simulation in order to find inputs that ``work''.
 In cases where the amount of information leaked by a system is large enough, this is sufficient to determine the missing component.
 Finally, the danger of ignoring hidden dependencies in information about a system: this is captured by the formal study of \emph{side-channels}~\cite{zhou2005side} in hardware and cryptography, but is not always applied evenly as a concept across different security-sensitive systems.
