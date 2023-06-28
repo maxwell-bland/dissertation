@@ -1,7 +1,7 @@
 \chapter{Preliminaries}
 \label{chap:prelim}
 
-Here, we introduce concepts, vocabulary terms, operations, and initial related work that is referenced throughout this disseration.
+Here, we introduce concepts, vocabulary terms, operations, and initial related work that is referenced throughout this dissertation.
 The theme of each of these subject areas is the representation of information, whether that information relates to the operation of binary code, the content of removed text, or a deduced interpretation of an existing system.
 
 \section{Abstract Interpretation}
@@ -10,23 +10,30 @@ Under the traditional definition, \emph{abstract interpretation} is a method of 
 It is related to the emulation of a program in that it is intended to extract a model of the program's behavior without performing the exact computations involved.
 However, abstract interpretation has become more of a general framework for defining relations between different domains, as the necessity of translation between dissimilar symbolic representations, e.g. in transpilers, has become more prevalent.
 
-Arbitrarily, let $L$ and $L'$ be \emph{concrete} and \emph{abstract} ordered sets, repectively.\footnote{The ordering of higher or lower levels of abstraction themselves is a function over the mathematical structures being discussed.}
+Arbitrarily, let $L$ and $L'$ be \emph{concrete} and \emph{abstract} ordered sets, respectively.\footnote{The ordering of higher or lower levels of abstraction themselves is a function over the mathematical structures being discussed.}
 These sets are related to each-other by a total function, which maps elements in one set to another.
 We define two functions, $\alpha$ and $\gamma$, which map elements of $L$ to $L'$ and vice versa, and are called the \emph{abstraction} function and \emph{concretization} function respectively.
 
 Then, given ordered sets $L_{1}, L_{2}, L'_{1}, L'_{2}$, the concrete semantics $f$ is a monotonic function from $L_{1}$ to $L_{2}$, and a correct abstraction from $L$ to $L'$ is \emph{valid} if the abstract semantics $f'$ mapping $L'_{1}$ to $L'_{2}$ preserves the ordering in $f$ of $L_{1}$ to $L_{2}$.
-In this definition the ordering operation on the sets is left undefined, and in the absence of a decidable set of mathematical qualities, e.g. many nontrivial computer programs, so standard implementations of abstract interpretation on program execution operate by mapping between a concrete execution trace in registers and memory and the theory of bitvectors, rather than the highly abstract semantics used by programs' users and authors.
+In this definition the function used to provide an order on objects in the sets is undefined.
+The primary goal of abstract interpretation is to explore all executions of a program by over-approximation.
+This is established by working from an abstraction of a concrete state (e.g. registers and memory) and providing commutativity: given a $c' = o(c)$ where $o$ is an operation and $c$ a concrete state, and $\alpha(c)$ the abstraction of $c$, $o(\alpha(c)) = \alpha(o(c))$ must hold true.
+Second, states are \emph{joined} when their execution reaches an equivalent program counter (in the simplest case, by combining two sets, e.g. $a\ join\ b = \{a,b\}$).
+They may also be \emph{widened}, a statement in logic which handles undecidable semantics, e.g. loops, to ensure all executions are ultimately analyzed.
 
 \subsection{Symbolic Execution}
 
-The specific form of abstract interpretation from machine code to the theory of bitvectors is often referred to as \emph{symbolic execution}, and is a method of program analysis that operates by tracking the values of variables in a program as symbolic expressions, rather than concrete values.
+A standard misconception is that \emph{symbolic execution} is a form of abstract interpretation: symbolic execution is concerned with the expression of the values of all variables (the state) for arbitrary points in a program's execution as functions of initial values.
+To do so, it only needs to compute an under-approximation of the possible program states, and not all possible executions.
+However, in practice, symbolic execution is implemented \emph{through} a method for the abstract interpretation of a concrete, machine code program into the theory of bit-vectors.
 For example, in standard execution the statement $(x > 5) ?\ y + 1 : x + 1$ would be concretely evaluated to 4 if $x = 3$, however, a standard symbolic execution, the system will record the pair $(x<=5; x=x+1),(x>5;x=y+1)$ into a symbolic state, representing the two possible execution paths.
+Unlike abstract interpretation, symbolic execution's limitations make it more immediate: a function of initial values can be defined without explicit widening or joining operations.
 
 Symbolic execution is a powerful tool for program analysis, but it is not without its limitations.
 The core challenge is the \emph{path explosion} problem, where the number of possible execution paths grows exponentially with the number of branches in the program.
 This can be limited through \emph{loop invariant} analysis, where the system attempts to identify the invariants of a loop and only execute the loop a finite number of times, a \emph{search strategy}, which determines which execution paths to explore from the exponential number possible, or a number of other deductive techniques.
-Closely related is the challenge of \emph{memory aliasing}, which occurs when the system is unable to determine whether two pointers point to the same memory location, as the values of each pointer are treated as symbolic expressions over the theory of bitvectors rather than concrete values.
-Additionally, there is the \emph{environmental modeling} problem, where symbolic execution is unsound due to missing context, typically because the specific execution behavior of the hardware is not present, e.g. interrupts or highly-specific microarchitectural features.
+Closely related is the challenge of \emph{memory aliasing}, which occurs when the system is unable to determine whether two pointers point to the same memory location, as the values of each pointer are treated as symbolic expressions over the theory of bit-vectors rather than concrete values.
+Additionally, there is the \emph{environmental modeling} problem, where symbolic execution is unsound due to missing context, typically because the specific execution behavior of the hardware is not present, e.g. interrupts or highly-specific micro-architectural features.
 
 \subsection{Lifting}
 \label{ref:lifting-prelim}
@@ -121,7 +128,7 @@ Symbolic execution can be used to determine a given slice by exploring all paths
 
 \subsection{Intermediate Representations}
 
-The term \emph{intermediate representation} (IR) refers to a representation of a program that is used as an intermediate step a translation process, typically for a compiler.
+The term \emph{intermediate representation} (IR) refers to a representation of a program that is used as an intermediate step of a translation process, typically for a compiler.
 The IR is typically designed to be easy to translate to and from the source and target languages, and to be easy to reason about.
 Referring to Fig.~\ref{fig:lift}, in lifting the IR is the structure $Z$ used to translate between $X$ and $Y$.
 The critical form of IR for use in symbolic execution and abstract interpretation more generally are abstract syntax trees (ASTs).
@@ -170,8 +177,8 @@ Thus, the use of these techniques is ultimately one basis for emulation, an insi
 \section{Information}
 
 Many definitions of \emph{information} exist---this dissertation will use information to represent \emph{pure difference} or distiguishability between two objects, e.g. 0 and 1.
-A key measure of information is \emph{entropy} which quantifies the amount of uncertainty involved in a random process.
-Given a random variable $X$ with a probability distribution $P$, the entropy of $X$ is defined as
+A key measure of information is \emph{entropy} which quantifies the amount of uncertainty involved in a random process~\cite{cover1999elements}.
+Given a discrete random variable $X$ with a probability distribution $P$, the entropy of $X$ is defined as
 
 \begin{equation}
 H(X) = -\sum_{x \in X} P(x) \log_2 P(x)
@@ -185,37 +192,38 @@ The use of base 2 for the log indicates that entropy is measured in \emph{bits}.
 Entropy quantifies the amount of information in a distribution as the number of bits required to represent it.
 For a uniform distribution over $n$ values, the entropy is $\log_2 n$.
 
-It is therefore also possible to quantify the amount of information \emph{leaked} by a process if we consider the amount of information present in the initial, presumed inaccessible distribution and compare this with the amount of information present in the final, accessible distribution.
-What actually exists is what can be differentiated: if the number of bits in the final distribution is lower than the number of bits in the initial distribution, then some information has been lost.
+It is therefore also possible to quantify the amount of information \emph{leaked} by a random process $f$ taking a ``secret'' input $X$ and producing output $Y$ as what number of bits of $X$ may be inferred from $Y$.
+If the number of bits determinable from $Y$ about $X$ is lower than the total number of bits required to represent $X$, information has been lost.
 This does not necessarily indicate it is impossible to disambiguate a \emph{specific} value using accessible information, but (assuming quantization) that some value from the initial distribution cannot be differentiated from some other value.
 
-We will refer to the prior, inaccessbile distribution as a \emph{dictionary} which limits the scope of the possibilities we are willing to consider.
+For accurate emulations and measuring security, we are concerned with determining how much information it is possible to recover about $X$ from $Y$.
+However, $X$ is inaccessible in many cases, so we must select some $X'$ as a \emph{dictionary} limiting the scope of the possibilities we are willing to consider.
+Selecting a point $x \in X'$, if $f(x) \in Y$ and $f$ is assumed deterministic, then it is possible $x \in X$.
 In some cases it is possible to construct a dictionary that is \emph{complete}, i.e. that contains all possible values.
 When a dictionary is incomplete, often due to practical limitations on computation and analysis time, it becomes necessary judge whether a dictionary is reasonable.
 
-\subsection{Guess and Check}
+\subsection{Guess-and-Check}
 
 We consider a dictionary reasonable if it contains values that are likely to be observed in practice.
 However, this is not a sufficient restriction for \emph{soundness}, i.e. that results derived from considering the dictionary as the superset of the accessible information must include all correct values.
 So we have two forms of uncertainty: analytic uncertainty with respect to the dictionary, and empirical uncertainty with respect to the resolution of the correct dictionary entry from available information.
 The former occurs in cases where the true set of values may not be a strict subset of the considered values, and the latter occurs where information is lost.
 
-The derivation of a value from accessible infromation is a \emph{guess} and must be subject to some form \emph{check}, or \emph{oracle} to determine whether, in fact, it is a correct derivation.
-However, when analyzing real systems, an oracle is often unavailable, and so we must rely on the \emph{likelihood} of a guess being correct.
+The derivation of a value from accessible information is a \emph{guess} and must be subject to some form \emph{check}, or \emph{oracle} to determine whether, in fact, it is a correct derivation.
+However, when analyzing real systems, an oracle is often unavailable, so we must rely on the statistical probability of a guess being correct.
 
-\subsection{Likelihood, Dependence, and Independence}
+\subsection{Regularity Conditions, Dependence, and Independence}
 
-Likelihood is is a defined function measuring the probability of a given value being selected for a random variable.
-In general, whatever the likelihood function, it is dependent on certain \emph{regularity conditions}, a set of assumptions which imply that the probability given by the function is correct.
-A \emph{uniform} distribution over a set of values implies that the likelihood of any value is equal to the inverse of the number of values.
-An \emph{empirical} distribution over a set of values implies that the likelihood of any value is equal to the frequency of that value in the set.
+Correct guesses are dependent on certain \emph{regularity conditions}, assumptions which imply a given estimation of a probability is correct.
+For example, assuming a \emph{uniform} distribution over a set of values implies that the probability of any value being selected is equal to the inverse of the number of values.
+In contrast, an \emph{empirical} distribution over a set of values implies that the probability of any value being selected is equal to the frequency of that value in the set.
 
-The likelihood of a guess being correct is dependent on the amount of information available to the guesser, and is informed by the method of analysis.
+The probability of a guess being correct is dependent on the amount of information available to the guesser, and is informed by the method of analysis.
 We therefore differentiate between \emph{dependent} and \emph{independent} information.
-Two pieces of information are \emph{dependent} if the presence of one piece of information affects the likelihood of the other.
-Two pieces of information are \emph{independent} if the presence of one piece of information does not affect the likelihood of the other.
+Two pieces of information are \emph{dependent} if the presence of one piece of information affects the probability the other is also present.
+Two pieces of information are \emph{independent} if the presence of one piece of information does not affect the probability of the other being present.
 
-The goal of analysis and emulation is often to maximize the likelihood of correct guesses, ideally to remove guesswork altogether, and relies on the identification and explication of dependencies between information.
-It is possible to quantify the capacity of an emulation by considering the accessible information present in the emulated copy in contrast to the ground-truth system.
-A perfect simulation would perfectly disambiguate any feature that can be disambiguated in the ground-truth system, and so the accessible information in the emulated copy would be equal to the accessible information in the ground-truth system, and a poor emulation would disambiguate nothing (be unrelated to the original system).
-The capacity of an emulation is proportional to our capacity for analyzing the ground-truth system.
+In this dissertation, we will consider the role that the probability a guess is correct plays when measuring security and constructing emulations.
+Our study of rehosting will demonstrate perfect inference of an absolutely ``correct'' value returned by a missing hardware device is not necessary to construct a useful emulation.
+In studying redactions, we will show how assuming a certain regularity condition, e.g. an empirical distribution of names in a population, can make privacy attacks significantly more effective.
+Finally, our framework for the extraction of continuous functions from binary firmware will illustrate the utility of frameworks for inferring and explicating dependencies between information in a system.

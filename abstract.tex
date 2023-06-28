@@ -1,12 +1,13 @@
 \begin{abstract}
-The saftey of critical systems and data is of paramount importance to society.
+The safety of critical systems and data is of paramount importance to society.
 Attacks on these systems can have catastrophic consequences, and the security of these systems is often difficult to measure.
-Existing methods often involve access to ground-truth information, which is not always available.
-In this dissertation, we explore the use of emulation to measure the security of systems in the absence of ground-truth information.
+Existing methods often involve access to an operating version of the system, such as a physical device or executable specification, to provide ground-truth.
+However, access to a complete representation of the system is not always possible or practical.
+In this dissertation, we explore the use of emulation to measure the security of systems in the absence of this ground-truth information.
 
-Complex system emulations often require sophisticated approaches to digital forensics and tactics for navigating undecidability resulting from uncertainty of the system's state.
-To address these challenges, we present intelligent guess and check strategies for deducing hidden information in symbol-stripped binary firmware.
-Our core technical contributions are (1) the first abstract interpretation based firmware rehosting system, used to generate emulations of embedded systems.
+Complex system emulation often requires sophisticated approaches to digital forensics and tactics for navigating undecidability resulting from uncertainty of the system's state.
+To address these challenges, we present intelligent guess-and-check strategies for deducing hidden information in executable code in the absence of original source code or other auxiliary information.
+Our core technical contributions are (1) the first symbolic execution based firmware rehosting system, used to generate emulations of embedded systems.
 (2) A novel system for the analysis and recovery of glyph positioning information in PDF documents.
 This system was used to recover redacted text information where the characters were removed in hundreds of sensitive documents.
 (3) A logic-based intermediate representation and framework for the extraction of lifted function summaries from binary firmware.

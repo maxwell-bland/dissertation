@@ -10,7 +10,7 @@ There is nothing inherently wrong with any of these approaches, but they still h
 And regardless of the approach taken to security, as with most problems, there remain unknown features of the system under analysis (or simply too many systems), making it potentially impossible to predict all future exploits.
 In 2022, Mitre reported 34,553 CVE entries~\cite{mitre2022}, following a steady, monotonic increase from 2016.
 Moreover, metrics for evaluating the complexity of source code are still fail to capture developer expectations~\cite{pantiuchina2018improving, feigenspan2011exploring, feitelson2023code}.
-Even in the ``good'' case, where we have perfect ground truth for a system, algorithms struggle to make accurate judgements of general constructs in real systems, judgments necessary to determine systems' security.
+Even in the ``good'' case, where we have perfect ground truth for a system, algorithms struggle to make accurate judgments of general constructs in real systems, judgments necessary to determine systems' security.
 
 The security of a system hinges on whether the flaws in the system are represented in an accessible medium whereby they are effectively identified and corrected, a hard problem as every measurement exists in a specific interpretive context~\cite{stolfo2011measuring}.
 Each paradigm for securing a system, e.g. a provably correct decision system, implicitly determines which flaws are considered or prevented and which are overlooked.
@@ -32,7 +32,7 @@ Within the broad areas of emulation and simulation, this dissertation focuses on
 
 \paragraph{Rehosting}
 Rehosting is the process of bootstrapping a system so that it can be emulated in a different context, typically a laptop computer instead of the original embedded system, e.g. a programmable logic controller.
-This encounters the particular challenge of modeling or reimplementing subsystems or subcomponents that are not present in the new context, such as hardware devices.
+This encounters the particular challenge of modeling or re-implementing subsystems or sub-components that are not present in the new context, such as hardware devices.
 If a ground truth reference for the subsystem's behavior is available, then this can be used to bootstrap a simulation of it (or sometimes a connection to the subsystem itself) in the new context, but this is not always the case.
 In cases where a ground truth reference is not available, the behavior of the subsystem must be inferred from residual information recoverable from the system, such as binary code for interacting with the subsystem.
 
@@ -50,7 +50,7 @@ While this can potentially miss the validation of critical components, careful l
 
 \paragraph{Challenges}
 Rehosting, dictionary attacks, and lifting each have their own challenges in generalization, scalability, and completeness respectively~\cite{wright2021challenges, delaune2004theory, reps2006intermediate}.
-Significant progress continues to be made in addressing these challenges in order to apply each of these techniques to practical problems, and approaches to emulation are often mixed in order to acheive effective results~\cite{p2im2020, clementshalucinator, li2018fuzzing, zheng2019firm, yun2018qsym, borzacchiello2021fuzzolic}.
+Significant progress continues to be made in addressing these challenges in order to apply each of these techniques to practical problems, and approaches to emulation are often mixed in order to achieve effective results~\cite{p2im2020, clementshalucinator, li2018fuzzing, zheng2019firm, yun2018qsym, borzacchiello2021fuzzolic}.
 However, each of these strategies presents a perspective on the problem of evaluating a system in the absence of a complete model, and so all recent work shares a common goal of determining knowable and unknowable features or flaws in a system.
 
 \paragraph{Dissertation Topics}
@@ -62,7 +62,7 @@ As a result, our strategies are particularly useful for real-world systems of wh
 Thus, we are also able to provide evidence of our theories' effectiveness in practice and provide insight into the absolute limits of emulation.
 
 In the description of these strategies for emulation, we will find the application of guesswork is unavoidable, and that these guesses must later be checked and verified against the system itself.
-Correct emulation avoids making unjustified assumptions about possible states or accurate respresentations of the system under analysis.
+Correct emulation avoids making unjustified assumptions about possible states or accurate representations of the system under analysis.
 Luck and probability play an integral role in the application of emulations and the proper use of emulation often requires the joint application of uncertainty and sensitivity analysis, but we will not limit ourselves to analyzing emulations in terms of axiomatics or quantification via a unifying theory.
 A complete description of the problem acknowledges mathematics does not confer existence upon its subject and adopts conceptual or empirical strategies into the execution and analysis of unknown system features.
 That is, in this dissertation, we focus on the symbolic representations that exist prior to analysis and effects of interpretive frameworks on the generation of emulations from the context of:
@@ -73,7 +73,7 @@ That is, in this dissertation, we focus on the symbolic representations that exi
 	\item the use of logic-based intermediate representations for lifting between symbolic domains~\cite{bland2023integreat} (Chapter~\ref{chap:integreat}).
 \end{enumerate}
 
-With exceptions for the implementation of a taint-tracking based symbolic execution system in QEMU and some ideas relating to symbolic search strategies (Chapter~\ref{chap:rehost}), the information leak quantification for specific redaction dictionaries (Chapter~\ref{chap:info}), as well as the analysis of the quadcopter stabilization algorithm (Chapter~\ref{chap:integreat}), which were implemented jointly with coauthors, the works presented in this dissertation are the author's own with dialectic support from coauthors.
+With exceptions for the implementation of a taint-tracking based symbolic execution system in QEMU and some ideas relating to symbolic search strategies (Chapter~\ref{chap:rehost}), the information leak quantification for specific redaction dictionaries (Chapter~\ref{chap:info}), as well as the analysis of the quad-copter stabilization algorithm (Chapter~\ref{chap:integreat}), which were implemented jointly with coauthors, the works presented in this dissertation are the author's own with dialectic support from coauthors.
 
 We next provide a more detailed introduction to each of the above topic areas, followed by a summary of contributions and impacts.
 
@@ -86,19 +86,19 @@ Implementing an emulation of a system's hardware devices is labor intensive, the
 In this dissertation, we discuss the possibility of generating emulations of hardware from information present in firmware alone, with the first strategy being the symbolic analysis of firmware interactions with hardware devices.
 By collecting the constraints software places on the function of hardware during interaction with hardware peripherals, it is possible to synthesize a model of the hardware device.
 We show the limitations and challenges involved in this analysis and find that in many cases it is possible to use this partial constraint information to generate a useful emulation of associated hardware.
-In solving this challnge, we introduce one of the first fuzzing systems targeted at arbitrary QEMU system simulations, and several tactics for dealing with undecidable problems related to symbol-stripped, binary program analysis.
-We applied this system to more than ten firmware images, but we focus on one in particular, the Communication Management Unit of a Boeing 737, and other aircraft, responsible for managing a large part of the communication of key Line Replacable Units (LRUs) in the aircraft, including the Flight Management Computer.
+In solving this challenge, we introduce one of the first fuzzing systems targeted at arbitrary QEMU system simulations, and several tactics for dealing with undecidable problems related to symbol-stripped, binary program analysis.
+We applied this system to more than ten firmware images, but we focus on one in particular, the Communication Management Unit of a Boeing 737, and other aircraft, responsible for managing a large part of the communication of key Line Replaceable Units (LRUs) in the aircraft, including the Flight Management Computer.
 Our emulated hardware not only allowed us to develop an effective rootkit and local code execution attack on the CMU, but also identify three remote messages capable of powering down the machine, creating a denial-of-service attack.\footnote{Due to their sensitivity, the specifics of these exploits are not given explicit detail.}
 
 In the preliminary section of this dissertation, we introduce the notion of abstract interpretation as a method of reasoning about symbols inside of algorithms.
 This method was implied in the form of symbolic execution within the Jetset system~\cite{johnson2021jetset}, where it was able to rehost all the devices targeted by an ``equivalent'' fuzzing approach~\cite{p2im2020}, as well as and SEL Feeder Protection relay controlling breaker switches in electrical substations~\cite{feederprotection}, the aforementioned CMU-900~\cite{cmudevice}, and various SoCs (Raspberry Pi 2 and BeagleBoard-xM)~\cite{raspbpi, beagleboard}.
 The rehosted emulations can be subject to several forms of potentially destructive dynamic analysis routines that would be impossible on the physical device, such as fuzzing, which may ``brick'' the device in question.
 The use of symbolic execution for rehosting-related tasks has now been adopted and integrated into several additional research works in top venues to rehost a variety of systems~\cite{zhou2022your, chen2022metaemu, hernandez2022firmwire, sun2022spenny}.
-A complete explication of the challenges and techniques involved in rehosting is beyond the scope of this disseration and we refer interested readers to~\cite{wright2021challenges}.
+A complete explication of the challenges and techniques involved in rehosting is beyond the scope of this dissertation and we refer interested readers to~\cite{wright2021challenges}.
 
 \section{Glyph Positions Break PDF Text Redaction}
 
-The analyis of embedded systems is just one application of emulation---emulation of software systems can also play a vital role in the analysis of information leaks.
+The analysis of embedded systems is just one application of emulation---emulation of software systems can also play a vital role in the analysis of information leaks.
 By extracting and emulating the glyph positioning behavior of popular PDF document creation software, it is in fact possible to generate precise fingerprints for the layout of text on a page.
 It turns out that this layout contains sub-pixel error-correction information which leaks a large amount of information about any text redactions where characters are removed the document's digital representation.
 
@@ -117,18 +117,18 @@ Our findings resulted in the notification of more than 22 different US governmen
 The last topic addressed in this dissertation is a bottom-up approach to verification, a 
 system for lifting discrete binary code algorithms to the continuous domain for simulation
 in frameworks like Matlab Simulink~\cite{bland2023integreat, matlab}.
-We consider the possibility of representing symbolic translation rules in a logic-based intermediate representation, where microarchitectural features are modeled deductively and complex statements about program semantics may be derived by nesting simpler statements.
-Intermediate representations for the purposes of lifting (decompilation), translation, and emulation are an active area of research and are used by several high-powered offensive analysis tools such as angr and Ghidra, however, logic has not yet been used as a syntax for describing microarchitectural features in a decompiler~\cite{lattner2021mlir, quinlan2000rose, chen2022metaemu, eagle2020ghidra, kim2017testing, stanier2013intermediate}.
+We consider the possibility of representing symbolic translation rules in a logic-based intermediate representation, where micro-architectural features are modeled deductively and complex statements about program semantics may be derived by nesting simpler statements.
+Intermediate representations for the purposes of lifting (decompilation), translation, and emulation are an active area of research and are used by several high-powered offensive analysis tools such as angr and Ghidra, however, logic has not yet been used as a syntax for describing micro-architectural features in a decompiler~\cite{lattner2021mlir, quinlan2000rose, chen2022metaemu, eagle2020ghidra, kim2017testing, stanier2013intermediate}.
 
 As a result, current intermediate representations for binary analysis suffer from several drawbacks related to nesting and translation.
 They strive for a static representation of program semantics rather than one which must be dynamically evaluated, limiting their representational capacity for more complex semantic structures present in code.
 This dissertation explores the possibility of using a logic-based intermediate representation to lift continuous control equations from the binary firmware of Cyber-Physical Systems~\cite{letichevsky2017cyber}.
-We begin by representing and lifting simple microarchtectural semantics, such as the splitting of a floating point number split across registers 0 and 1 in the ARM architecture.
+We begin by representing and lifting simple micro-architectural semantics, such as the splitting of a floating point number split across registers 0 and 1 in the ARM architecture.
 These rules are then nested into more complex deductive chains, such as the structure of common mathematical functions, through the use of statements in propositional logic over the theory of uninterpreted functions\footnote{Uninterpreted functions discard the computation under analysis and reduce it to a single symbol and list of input, output locations.}.
 The representation is extracted using abstract interpretation as a subroutine to identify the specific relations between input and output locations, in order to translate logically-defined program slice boundaries in the system under analysis to relations and operations over uninterpreted functions.
 The results are then combined via a theorem prover to lift implicit, abstract semantics from a binary firmware images, e.g. mathematical functions like cosine.
 
-We implemented this approach in a tool called InteGreat and use the tool to extract functions from a Programmable Logic Controller (PLC) used to control the reactor pressure of a chemical plant, as well as the stabilization algorithm of a quad-copter and a single backpropagation step in an artificial neural network.
+We implemented this approach in a tool called InteGreat and use the tool to extract functions from a Programmable Logic Controller (PLC) used to control the reactor pressure of a chemical plant, as well as the stabilization algorithm of a quad-copter and a single back-propagation step in an artificial neural network.
 InteGreat does not just lift program slices to the continuous domain using the logical statements embedded in its intermediate representation: it then translates the lifted representation into a Matlab emulation of the system, allowing us to model precise destabilization attacks on the chemical plant and identify flaws in implementations and published versions of the quad-copter's stabilization algorithm.
 
 \section{Summary of Contributions}
@@ -139,9 +139,9 @@ Our contributions are therefore as follows:
 
 \begin{enumerate}
 	\item Novel state-of-the-art techniques in the rehosting and analysis of complex embedded systems through the use of targeted abstract interpretation and comprehension of firmware constraint sets into models of hardware peripherals.
-	This approach allowed us to emulate hardware devices across three different miroarchitectures~\cite{johnson2021jetset}, and perform dynamic analysis (fuzzing) of the systems in question, then reproduce the results of fuzzing on the related physical devices.
+	This approach allowed us to emulate hardware devices across three different micro-architectures~\cite{johnson2021jetset}, and perform dynamic analysis (fuzzing) of the systems in question, then reproduce the results of fuzzing on the related physical devices.
 		We were able to develop a sophisticated exploits for a critical avionics system by combining careful analysis of the generated emulations with analysis of the device in question~\cite{cmurootkit} (Chapter~\ref{chap:rehost}).
-	\item The first effective attacks on document redactions where the characters of the text are not presentin the PDF document (a literal black box)~\cite{bland2023story}.
+	\item The first effective attacks on document redactions where the characters of the text are not present in the PDF document (a literal black box)~\cite{bland2023story}.
 		By emulating the glyph positioning behavior of popular PDF document creation software, we were able to uncover sensitive information from several documents of significant historical importance.
 		Our approach has been used to identify hundreds of broken redactions in documents from the US Court System, the Digital National Security Archives, and the Office of Inspector General (Chapter~\ref{chap:info}).
 	\item The introduction of logic-based intermediate representations for binary lifting and the bottom-up verification of cyber-physical system implementations~\cite{bland2023integreat}.
@@ -151,7 +151,7 @@ Our contributions are therefore as follows:
 To the extent that it is safe, we have released software code and tools for all associated techniques: JetSet~\cite{jetsetsource}, which applies symbolic execution to rehosting, Edact-Ray~\cite{deredactionsource}, but only the portions relating to the location and defense of vulnerable redactions, and InteGreat~\cite{bland2023integreat}, for lifting using a logic-based intermediate representation.
 Each of these systems has been applied to real-world case study systems with verifiable results.
 The most impactful of these is Edact-Ray, which has identified vulnerabilities and hidden information in a number of important documents (Sec.~\ref{sec:redaction-attack} and Sec.~\ref{sec:redaction-ethics}); the full version of the tool now sees continued use by the US courts and the US OIG.
-Jetset was able to sucessfully rehost thirteen distinct peices of firmware (Sec.~\ref{sec:jetset-eval}) and an associated system-mode QEMU fuzzer was able to reproduce and identify identical codepaths across real and Jetset-emulated copies of both Linux system calls on the Raspberry Pi 2 and VRTX system calls on the CMU-900 (Sec.~\ref{sec:jetset-attack}).
+Jetset was able to successfully rehost thirteen distinct pieces of firmware (Sec.~\ref{sec:jetset-eval}) and an associated system-mode QEMU fuzzer was able to reproduce and identify identical code-paths across real and Jetset-emulated copies of both Linux system calls on the Raspberry Pi 2 and VRTX system calls on the CMU-900 (Sec.~\ref{sec:jetset-attack}).
 The techniques and tools are also actively being shared with numerous other researchers in the Department of Energy, Universities, and private industry.
 
 \section{Dissertation Structure}
